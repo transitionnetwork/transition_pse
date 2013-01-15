@@ -1,0 +1,11 @@
+<?php
+/**
+ * @file
+ * 
+ * Install file for Transition PSE Widget -- sets module weight very heavy
+ */
+ 
+function transition_pse_install() {
+  //Make sure we're heavy so our form_alter hook gets executed last
+  db_query("UPDATE {system} SET weight = 1000 WHERE name = 'transition_pse'");
+}

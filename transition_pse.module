@@ -1,0 +1,329 @@
+<?php
+/**
+ * @file Transition Project Sharing Engine
+ *
+ * Needs mild refactoring:
+ * @todo run through Coder.
+ * @todo break out user stuff to .user.inc.
+ * @todo move any text theme() functions (widget thanks, about) to .tpl.php?.
+ * @todo clean up code paths.
+ * @todo do a security audit.
+ */
+
+// The content type for PSE submissions
+define('TRANSITION_PSE_CT', 'project_pse');
+
+// Radius (miles) when searching for nearby projects
+define('TRANSITION_PSE_RADIUS', '50');
+
+/**
+ * Implementation of hook_init().
+ *
+ * Switches to the PSE the theme if we're viewing a widget page.
+ */
+function transition_pse_init() {
+  global $custom_theme;
+  // current page is a view or entry widget
+  if (arg(0) == 'pse' && (arg(1) == 'view' || arg(1) == 'entry')) {
+    $custom_theme = 'pse';
+  }
+  // or a pse callback for quicktabs
+  if (arg(0) == 'quicktabs' && arg(1) == 'ajax' && arg(3) == 'pse') {
+    $custom_theme = 'pse';
+  }
+}
+
+/**
+ * Implementation of hook_perm().
+ */
+function transition_pse_perm() {
+  return array(
+    'get widget code',
+    'view submissions in moderation',
+  );
+}
+
+/**
+ * Implementation of hook_menu().
+ */
+function transition_pse_menu() {
+  $items = array();
+  // add page -- builds a variant of the node/add/[TRANSITION_PSE_CT] page with
+  // unified reg/login first
+  $items['pse/entry/add-project/%/%'] = array(
+    // 'title' => 'Add your project',
+    'page callback' => 'transition_pse_entry_form_steps',
+    'page arguments' => array(3, 4),
+    'access arguments' => array('access content'),
+    'file' => 'transition_pse.pages.inc',
+    'type' => MENU_CALLBACK,
+  );
+  // thanks page -- says thanks, shows their project, promotes TN
+  $items['pse/entry/add-project/thank-you'] = array(
+    // 'title' => 'Add your project',
+    'page callback' => 'transition_pse_entry_thanks',
+    'access arguments' => array('access content'),
+    'file' => 'transition_pse.pages.inc',
+    'type' => MENU_CALLBACK,
+  );
+  // view pages -- SIDEBAR
+  $items['pse/view/sidebar/%/%'] = array(
+    // 'title' => 'Add your project',
+    'page callback' => 'transition_pse_view_sidebar',
+    'page arguments' => array(3, 4),
+    'access arguments' => array('access content'),
+    'file' => 'transition_pse.pages.inc',
+    'type' => MENU_CALLBACK,
+  );
+  // view pages -- FULL
+  $items['pse/view/full/%/%'] = array(
+    'title' => 'Transition Projects',
+    'page callback' => 'transition_pse_view_full',
+    'page arguments' => array(3, 4),
+    'access arguments' => array('access content'),
+    'file' => 'transition_pse.pages.inc',
+    'type' => MENU_CALLBACK,
+  );
+  $items['pse/view/full/search'] = array(
+    'title' => 'Find projects',
+    'page callback' => 'transition_pse_view_full_search',
+    'access arguments' => array('access content'),
+    'file' => 'transition_pse.pages.inc',
+    'type' => MENU_CALLBACK,
+  );
+  $items['pse/view/full/about'] = array(
+    'title' => 'About the PSE',
+    'page callback' => 'transition_pse_view_full_about',
+    'access arguments' => array('access content'),
+    'file' => 'transition_pse.pages.inc',
+    'type' => MENU_CALLBACK,
+  );
+  // get widget code page
+  $items['pse/widget/get'] = array(
+    'title' => 'Get the Project Sharing Engine widget!',
+    'page callback' => 'transition_pse_widget_generate',
+    'access arguments' => array('get widget code'),
+    'file' => 'transition_pse.widget.inc',
+    'type' => MENU_CALLBACK,
+  );
+  return $items;
+}
+
+/**
+ * Implementation of hook_mail()
+ */
+function transition_pse_mail($key, &$message, $params) {
+  module_load_include('inc', 'transition_pse', 'transition_pse.pages');
+
+  global $user;
+  // set language from message
+  $language = $message['language'];
+
+  switch ($key) {
+    case 'submitter_project_thanks':
+      transition_pse_submitter_mail_text('thanks', $message, $params);
+      break;
+    case 'submitter_project_accepted':
+      transition_pse_submitter_mail_text('accepted', $message, $params);
+      break;
+    case 'submitter_project_rejected':
+      transition_pse_submitter_mail_text('rejected', $message, $params);
+      break;
+    case 'webmaster_submission_new':
+      transition_pse_webmaster_mail_text('new', $message, $params);
+      break;
+    case 'webmaster_submission_reminder':
+      transition_pse_webmaster_mail_text('reminder', $message, $params);
+      break;
+  }
+}
+
+/**
+ * Implementation of hook_theme().
+ */
+function transition_pse_theme($existing, $type, $theme, $path) {
+  $path = drupal_get_path('module', 'transition_pse') .'/theme';
+  return array(
+    'pse_widget_container' => array(
+      'arguments' => array('type' => NULL, 'widget_urls' => NULL, 'assets' => NULL, 'options' => NULL),
+      'file' => 'transition_pse.widget.inc',
+    ),
+    'pse_widget_page' => array(
+      'template' => 'pse-page',
+      'path' => $path,
+      'arguments' => array('content' => NULL, 'header' => NULL, 'footer' => NULL),
+    ),
+    'pse_widget_page_header' => array(
+      'template' => 'pse-page-header',
+      'path' => $path,
+      'arguments' => array('title' => NULL, 'tabs' => NULL),
+    ),
+    'pse_widget_page_tabs' => array(
+      'template' => 'pse-page-tabs',
+      'path' => $path,
+      'arguments' => array('step' => NULL),
+    ),
+    'pse_widget_page_footer' => array(
+      'template' => 'pse-page-footer',
+      'path' => $path,
+    ),
+    'pse_widget_entry_container' => array(
+      'arguments' => array('widget_urls' => NULL, 'options' => NULL),
+      'file' => 'transition_pse.widget.inc',
+    ),
+    'pse_widget_entry_thanks' => array(
+      'file' => 'transition_pse.widget.inc',
+    ),
+    'pse_widget_view_container' => array(
+      'arguments' => array('type' => NULL, 'widget_urls' => NULL, 'options' => NULL),
+      'file' => 'transition_pse.widget.inc',
+    ),
+    'pse_widget_view_inner' => array(
+      'arguments' => array('content' => NULL),
+      'file' => 'transition_pse.widget.inc',
+    ),
+    'pse_widget_view_about' => array(
+      'file' => 'transition_pse.widget.inc',
+    ),
+
+  );
+}
+
+/**
+ * Implementation of hook_action_info().
+ *
+ * Provides 'accept' and 'reject' moderations actions for PSE submissions
+ */
+function transition_pse_action_info() {
+   return array(
+    'transition_pse_submission_reject_action' => array(
+      'type' => 'node',
+      'label' => t('Reject and delete project submission'),
+      'configurable' => FALSE,
+      'behavior' => array('changes_property'),
+      'triggers' => array('node_presave'),
+    ),
+    'transition_pse_submission_accept_action' => array(
+      'type' => 'node',
+      'label' => t('Accept and publish project submission'),
+      'configurable' => FALSE,
+      'behavior' => array('changes_property'),
+      'triggers' => array('node_presave'),
+    ),
+  );
+}
+
+/**
+ * Callback for rejection of PSE submission. Maps $submission to new Project
+ * Profile node, saves, then sends out notifications.
+ */
+function transition_pse_submission_accept_action($submission) {
+  // map $submission to new $project node, send out, delete $submission
+
+  // build new Project node, add values @todo move to own function
+  global $user;
+  $project = new stdClass();
+  $project->type = 'project_profile';
+  $project->uid = $submission->uid;
+  $project->status = 1; //(1 or 0): published or not
+  // title & body
+  $project->title = $submission->title;
+  $project->field_project_summary[0]['value'] = $submission->body;
+  // just assign the correct LID to our new Project node
+  $project->locations[0]['lid'] = $submission->locations[0]['lid'];
+  // project type
+  $project->field_project_org_type[0]['value'] = $submission->field_project_org_type[0]['value'];
+  // set related initiative as releated and web contact to widget owner
+  $project->field_initiative[0]['nid'] = $submission->field_submission_initiative[0]['nid'];
+  $project->field_webcontact_user[0]['uid'] = $submission->field_submission_webmaster[0]['uid'];
+  // set source as PSE
+  $project->field_content_source[0]['value'] = 'Widget-PSE';
+  // avoid this sending notifications
+  $project->notifications_content_disable = 1;
+  // Save this node
+  node_save($project);
+
+  // if saved ok, send notifications
+  if ($project->nid) {
+
+    // tell submitter about the new accepted project
+    $author = user_load($project->uid);
+    $params = array(
+      'node' => $project,
+      'author' => $author,
+    );
+    // send mail, write to logs
+    drupal_mail('transition_pse', 'submitter_project_accepted', $author->mail, language_default(), $params);
+    watchdog(
+      'transition_pse',
+      'PSE -- Accepted submission: @title, @project_link',
+      array(
+        '@title' => $project->title,
+        '@project_link' => url('node/' . $project->nid, array('absolute' => TRUE)),
+      )
+    );
+    // all done here, remove this now-defunct $submission node
+    node_delete($submission->nid);
+  }
+  // horid hack to clear the messages created by the deletion of the node
+  $_SESSION['messages'] = array();
+}
+
+/**
+ * Callback for rejection of PSE submission -- sends rejection email and
+ * deletes $submission.
+ */
+function transition_pse_submission_reject_action($submission) {
+  // load author of $submission, send message of rejection
+  $author = user_load($submission->uid);
+  module_load_include('inc', 'transition_pse', 'transition_pse.pages');
+  $params = array(
+    'node' => $submission,
+    'author' => $author,
+  );
+  // send mail, make note in log
+  drupal_mail('transition_pse', 'submitter_project_rejected', $author->mail, language_default(), $params);
+  watchdog(
+    'transition_pse',
+    'PSE -- Rejected submission: @title, @summary',
+    array(
+      '@title' => $submission->title,
+      '@summary' => $submission->body,
+    )
+  );
+  // delete the submission
+  node_delete($submission->nid);
+  // horid hack to clear the messages created by the deletion of the node
+  $_SESSION['messages'] = array();
+
+}
+
+/**
+ * template_preprocess function for pse_widget_page.tpl.php
+ *
+ * Adds $header and $footer theme calls to page
+ */
+function template_preprocess_pse_widget_page(&$vars) {
+  // get step from args for tabs
+  if (arg(3) == 'thank-you') {
+    $step = 3;
+  }
+  elseif (user_is_logged_in()) {
+    // logged in
+    $step = 2;
+  }
+  else $step = 1;
+  // build tabs
+  $tabs = theme('pse_widget_page_tabs', $step);
+  $vars['header'] = theme('pse_widget_page_header', drupal_get_title(), $tabs);
+  $vars['footer'] = theme('pse_widget_page_footer');
+}
+
+/**
+ * Wraps a static flag in a function so we know when we want to override a form
+ */
+function _transition_pse_overriding_form_flag($set = FALSE) {
+  static $flag = FALSE;
+  if ($set) $flag = TRUE;
+  return $flag;
+}

@@ -1,0 +1,100 @@
+.tn-pse-widget-container {
+  font:100%/1.5 "Helvetica Neue",Arial,Helvetica,Geneva,sans-serif;*font-size:1em;background-color:#fdfdfd;border:1px solid #D4D4D4;-webkit-border-radius:4px;-moz-border-radius:4px;border-radius:4px;
+  margin: 0;
+  padding: 5px;
+box-shadow:0 1px 2px 0 rgba(0, 0, 0, 0.25);-webkit-box-shadow:0 1px 2px 0 rgba(0, 0, 0, 0.25);-moz-box-shadow:0 1px 2px 0 rgba(0, 0, 0, 0.25);  }
+.tn-pse-widget-container .widget-upper,
+.tn-pse-widget-container .widget-lower {
+  padding: 5px;
+  margin: 0;
+  overflow:hidden;
+}
+
+
+.tn-pse-widget-container .widget-upper {
+  background-color:#fdfdfd;
+ border:3px solid #ccc;
+  webkit-border-radius:4px;-moz-border-radius:4px;border-radius:4px; height: auto;}
+
+
+.tn-pse-widget-container .modal-mask,
+.tn-pse-widget-container .modal-outer,
+.tn-pse-widget-container .modal-inner {
+  position: absolute;
+  top: 0;
+  left: 0;
+  margin: 0;
+  padding: 0;
+  right: 0;
+  bottom: 0;
+}
+
+.tn-pse-widget-container .modal-mask {
+  position: fixed;
+  display: none;
+  background-color: black;
+  background-color: rgba(0,0,0,.5);
+  z-index: 9999;
+}
+.tn-pse-widget-container .modal-outer {
+  background-color: white;
+  margin: 2em auto;
+  width:auto;
+  width: 95%;
+  max-width:1140px;
+  -moz-border-radius: 3px;
+  -webkit-border-radius: 3px;
+  border-radius: 3px;
+  box-shadow: 5px 5px 25px #000;
+  z-index: 11000;
+}
+
+.tn-pse-widget-container a.modal-button-close {
+  background: url(../images/icon_close.png) no-repeat left top;
+  border: none;
+  cursor: pointer;
+  float: right;
+  height: 33px;
+  outline: none;
+  overflow: hidden;
+  margin-top:-10px;
+  margin-right: -10px;
+  position: relative;
+  text-decoration: none;
+  text-indent: 100%;
+  width: 33px;
+  white-space: nowrap;
+  z-index: 11001;
+}
+
+.tn-pse-widget-container .modal-inner {
+  margin: 10px;
+}
+/*/ buttons in red just for testing purposes will change to turquoise soon when added the images to the div for logos etc /*/
+.tn-pse-widget-container a{
+  text-decoration: none;
+}
+.tn-pse-widget-container a:focus,.tn-pse-widget-container a:hover {
+  text-decoration: none;
+}
+
+a.entry-widget-launcher {
+  font-size:100%;letter-spacing:0.15em;padding:0.5em 2em 0.5em 2em;border-color:#8d1414;background-image:-webkit-gradient(linear, 50% 0%, 50% 100%, color-stop(0%, #d13d27), color-stop(100%, #8d1414));background-image:-webkit-linear-gradient(#d13d27,#8d1414 100%);background-image:-moz-linear-gradient(#d13d27,#8d1414 100%);background-image:-o-linear-gradient(#d13d27,#8d1414 100%);background-image:-ms-linear-gradient(#d13d27,#8d1414 100%);background-image:linear-gradient(#d13d27,#8d1414 100%);text-transform:uppercase;
+color:#fff;cursor:pointer;cursor:hand;-webkit-user-select:none;-khtml-user-select:none;-moz-user-select:none;-o-user-select:none;user-select:none;-moz-border-radius:4px;-webkit-border-radius:4px;-o-border-radius:4px;-ms-border-radius:4px;-khtml-border-radius:4px;border-radius:4px;position:relative;display:inline-block;padding:0.35em 1.5em 0.25em 1.5em;border:1px solid #ccc;text-align:center;}
+a.entry-widget-launcher:hover {
+  background-image:-webkit-gradient(linear, 50% 0%, 50% 100%, color-stop(0%, #e95449), color-stop(100%, #8d1414));background-image:-webkit-linear-gradient(#e95449,#8d1414 100%);background-image:-moz-linear-gradient(#e95449,#8d1414 100%);background-image:-o-linear-gradient(#e95449,#8d1414 100%);background-image:-ms-linear-gradient(#e95449,#8d1414 100%);background-image:linear-gradient(#e95449,#8d1414 100%);color:#fff}
+
+.widget-lower .grey-box {
+  background:#F7F7F8;
+  border-radius:5px;
+  -webkit-border-radius:5px;
+  -moz-border-radius:5px;
+  -webkit-box-shadow:0 1px 3px rgba(0,0,0,.3);
+  -moz-box-shadow:0 1px 3px rgba(0,0,0,.3);
+  box-shadow:0 1px 3px rgba(0,0,0,.3);
+  padding:2px 7px 5px;
+  margin-bottom:10px;
+}
+.widget-lower .grey-box p {
+  font-size:0.875em;
+}

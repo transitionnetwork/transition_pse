@@ -1,0 +1,16 @@
+; $Id$
+name = "Transition Project Sharing Engine"
+description = "Provides core logic and pages for the PSE"
+package = "Transition Network"
+
+version = "6.x-1.0-alpha3"
+core = "6.x"
+
+dependencies[] = "content"
+dependencies[] = "jquery_update"
+dependencies[] = "node"
+dependencies[] = "quicktabs"
+dependencies[] = "system"
+dependencies[] = "views"
+dependencies[] = "views_bulk_operations"
+dependencies[] = "web_widgets"

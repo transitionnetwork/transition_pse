@@ -1,0 +1,37 @@
+div.user-login-block a {
+   text-align: left;
+ }
+.pse-unified #login-message {
+  line-height: 1.2;
+}
+
+.pse-unified #login-links {
+  margin: 1em 0;
+  font-size: 1.2em;
+  line-height: 2;
+  font-weight: bold;
+}
+
+.pse-unified #login-links a {
+  padding: .5em;
+  border: 1px #666 solid;
+  background-color: #EEE;
+}
+
+.pse-unified #login-links a:hover {
+  background-color: #DDD;
+}
+
+.pse-unified #login-links a.lt-active,
+.pse-unified #login-links a.lt-active:hover {
+  background-color: #FFF19A;
+  border: 2px #333 solid;
+}
+
+.pse-unified.login #register-form {
+  display: none;
+}
+
+.pse-unified.register #login-form {
+  display: none;
+}
