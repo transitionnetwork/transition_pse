@@ -173,14 +173,15 @@ function transition_pse_entry_form($form_state) {
     '#type' => 'textarea',
     '#required' => '1',
     '#title' => t('Please add a short summary of your project'),
-    //'#description' => t('Please provide a brief statement that describes the aim and background to your project.'),
     '#weight' => 1,
-    '#max_length_properties' => array(
-      'limit' => 300,
-      'use_js' => TRUE,
-      'text' => t("!remaining of !limit characters remaining."),
-    ),
   );
+  // Adds MaxLength stuff by cheating and referring to Project CT field_project_summary settings.
+  // Unfortunately D6 versions is fucking DREADFUL so you can't just apply to any old field without
+  // dicking around a bunch.
+  if (module_exists('maxlength')) {
+    $form['summary']['#max_length_properties'] = array($form['summary']['#default_value'], 'field_project_summary', 'summary', 'project');
+    $form['summary']['#after_build'] = array('_maxlength_format_element');
+  }
 
   // Website @todo should use Link module, but can't find out how to show only URL!
   // Damn crappy Drupal contrib documentation! Have to map to correct field now, and
@@ -198,7 +199,6 @@ function transition_pse_entry_form($form_state) {
     '#title' => t('Location'),
     '#size' => '75',
     '#weight' => 5,
-    '#description' => t('Postcode does not have to be exact; the first half is fine.'),
     '#location_settings' => array(
       'form' => array(
         'fields' => array(
@@ -214,15 +214,17 @@ function transition_pse_entry_form($form_state) {
     )
   );
 
-  // Transition project? get data from CCK field
+  // Transition project? getting data from CCK field in an attempt to keep things
+  // auto synced... But could prob hardcode if easier...
   $field = content_fields('field_project_org_type', TRANSITION_PSE_CT);
   $options = array();
   foreach (explode("\n", $field['allowed_values']) as $option) {
     $option = explode('|', $option);
     $options[$option[0]] = $option[1];
   }
+  // override text on 'Transition' projects/
+  $options['Transition'] = t('Transition project (directly related to a Transition Initiative)');
   $form['project_type'] = array(
-    '#description' => t('A Transition project is directly related to a Transition Initiative'),
     '#type' => 'radios',
     '#title' => t(check_plain($field['widget']['label'])),
     '#default_value' => $field['widget']['default_value'][0]['value'],
@@ -355,17 +357,32 @@ function transition_pse_entry_form_submit($form, &$form_state) {
  * but hey ho...
  */
 function transition_pse_locationapi(&$obj, $op, $a3 = NULL, $a4 = NULL, $a5 = NULL) {
-  if ($op == 'field_expand' && $a3 == 'city') {
-    return array(
-      '#type'           => 'textfield',
-      '#title'          => t('Nearest village/town/city'),
-      '#default_value'  => $obj,
-      '#size'           => 64,
-      '#maxlength'      => 255,
-      '#description'    => NULL,
-      '#attributes'     => NULL,
-      '#required'       => ($settings['collect'] == 2),
-    );
+  if ($op == 'field_expand' ) {
+    switch ($a3) {
+      case 'city':
+        return array(
+          '#type'           => 'textfield',
+          '#title'          => t('Nearest village/town/city'),
+          '#default_value'  => $obj,
+          '#size'           => 64,
+          '#maxlength'      => 255,
+          '#description'    => NULL,
+          '#attributes'     => NULL,
+          '#required'       => ($settings['collect'] == 2),
+        );
+        break;
+      case 'postal_code':
+        return array(
+          '#type'           => 'textfield',
+          '#title'          => t('Postal code'),
+          '#description' => t('Postcode does not have to be exact; the first half is fine.'),
+          '#default_value'  => $obj,
+          '#size'           => 16,
+          '#maxlength'      => 16,
+          '#required'       => ($settings['collect'] == 2),
+        );
+        break;
+    }
   }
 }
 
