@@ -1,10 +1,10 @@
 <?php
 /**
  * @file
- * 
+ *
  * Include file for PSE widget generation and related tasks.
  */
- 
+
 /**
  * get widget code page callback
  * @todo tidy this up, break into smaller functions and theme()
@@ -13,7 +13,7 @@ function transition_pse_widget_generate($account_uid = -1, $type = 'sidebar', $i
   // belt & braces ensure user and type are ok
   global $user;
   if ($account_uid == -1) $account_uid = $user->uid;
-  if ($type <> 'full') $type = 'sidebar';
+  if ($type <> 'full' && $type <> 'button') $type = 'sidebar';
   $output = '';
   // set up options array for easy tweaking -- one day make overridable through UI
   $options = array(
@@ -66,8 +66,16 @@ function transition_pse_widget_generate($account_uid = -1, $type = 'sidebar', $i
   }
 
   // add form to allow choice of sidebar/full and ini to relate to via UI/tabs/links etc.
+  $path = base_path() . drupal_get_path('module', 'transition_pse');
+  $output .= '<div class="help">' . t(
+    '<strong>What\'s the Project Sharing Widget?</strong> You might like to learn more about the widget and its use with our <a href="@link_faq">FAQs</a> and <a href="@link_setup">setup guide</a>.',
+    array('@link_faq' => 'pse/widget/faq', '@link_setup' => url('/node/27590'))
+  ) . '</div>';
   $output .= t('<h3>Step 1: Choose your style and initiative</h3>');
-  $output .= t('<p>Remember to click "Update widget" if you make a change to these settings.<p>');
+  $output .= t(
+    '<p><img src="@path" alt="Screenshots of full sidebar widgets on initiative websites" class="float-right" height="400" width="440"> Remember to click "Update widget" if you make a change to these settings.<p>',
+    array('@path' => $path . '/images/PSE_widget-screenshots.jpg')
+  );
   $output .= drupal_get_form('transition_pse_widget_generate_options_form', $type, $initiatives, $options);
 
 
@@ -82,10 +90,9 @@ function transition_pse_widget_generate($account_uid = -1, $type = 'sidebar', $i
       'entry nojs' => $base_url_secure . "/pse/entry/add-project/$account_uid/$initiative_id",
     );
     // set up widget asset paths
-    $path = drupal_get_path('module', 'transition_pse') . '/widget';
     $assets = array(
-      'js' => $base_url . '/' . $path . '/widget.js',
-      'css' => $base_url . '/' . $path . '/widget.css',
+      'js' => $base_url . '/' . $path . '/widget/widget.js',
+      'css' => $base_url . '/' . $path . '/widget/widget.css',
     );
 
     // build widget HTML, put into page
@@ -95,7 +102,7 @@ function transition_pse_widget_generate($account_uid = -1, $type = 'sidebar', $i
     if ($type == 'full') {
       $output .= t('<div class="help"><strong>Note</strong>: This "Full page" widget needs a new page on your website. Add this code to a new page you have created on your website.</div>');
     }
-    $output .= '<div id="tn-pse-demo-container"' . ($type == 'sidebar' ? ' style="width: 220px; margin: 0 auto"' : '') . '>';
+    $output .= '<div id="tn-pse-demo-container"' . ($type <> 'full' ? ' style="width: 235px; margin: 0 auto"' : '') . '>';
     $output .= $widget_html . '</div>';
 
     // spit out embed selection using Web Widgets module theme functions
@@ -103,11 +110,14 @@ function transition_pse_widget_generate($account_uid = -1, $type = 'sidebar', $i
     $output .= theme('web_widgets_embed_code', $widget_html, 'iframe');
 
     //@todo theme functions!
-    $output .= t('<h3>Step 4: Moderate the responses</h3>');
+    $output .= t('<h3>4. Now the widget is on your website</h3>');
+
+    $output .= t('<p>To get projects added you now need to promote the widget: Put it in your
+      newsletters, email-outs, link to it from your news items, and tell everyone about it.</p>');
     $output .= t(
-      '<p>Once you\'ve pasted your code into your site you will start to get new
-      project submissions. They first appear on the <a href="@link">PSE moderation tab of your user account</a>
-      ready for you to examine and accept or reject.</p>',
+      '<p>Once people start adding their proejcts, you will get the project submissions alerts
+      via email. Please attend to these as soon as you can; it won\'t take long. You will be able to moderate
+      tje submissions in the <a href="@link"><em>Projects moderation</em> tab </a>of your user account.</p>',
       array('@link' => 'user/' . $account_uid . '/widget-moderation')
     );
   }
@@ -135,6 +145,7 @@ function transition_pse_widget_generate_options_form($form, $type, $initiatives,
       '#options' => array(
         'sidebar' => t('Sidebar widget'),
         'full' => t('Full page widget'),
+        'button' => t('Button-only widget'),
       ),
     );
   $form['initiative'] = array(
@@ -156,6 +167,39 @@ function transition_pse_widget_generate_options_form($form, $type, $initiatives,
 }
 
 /**
+ * Implementation of hook_theme_registry_alter().
+ */
+function transition_pse_widget_theme_registry_alter(&$theme_registry) {
+  if (!empty($theme_registry['web_widgets_embed_code'])) {
+    $theme_registry['web_widgets_embed_code']['function'] = 'transition_pse_widget_web_widgets_embed_code';
+  }
+}
+
+/**
+ * Overrides theme_web_widgets_embed_code() to
+ */
+function transition_pse_widget_web_widgets_embed_code($code, $style) {
+  $styles = web_widgets_get_styles();
+  $style_name = $styles[$style];
+
+  static $num = 0;
+  $form = array(
+    '#type' => 'textarea',
+    '#title' => t('Embed code'),
+    '#description' => t('Copy and paste ALL this code to your website.'),
+    '#id' => 'web_widgets_'. $num++,
+    '#name' => 'web_widgets',
+    '#value' => $code,
+    '#parents' => array('none'),
+    '#rows' => 10,
+    '#resizable' => FALSE,
+    '#attributes' => array('style' => 'width: 99%'),
+    '#maxlength' => FALSE,
+  );
+  return drupal_render($form);
+}
+
+/**
  * submit handler for transition_pse_widget_generate_options_form
  */
 function transition_pse_widget_generate_options_form_submit($form, &$form_state) {
@@ -172,14 +216,17 @@ function transition_pse_widget_generate_options_form_submit($form, &$form_state)
 function theme_pse_widget_container($type, $widget_urls, $assets, $options) {
   // build wrapper and include assets
   $output = '<!-- TN-PSE: widget begin -->';
-  $output .= '<script type="text/javascript">var tn_pse_entry_widget_url = "' . $widget_urls['entry'] . '";</script>';
+  $output .= '<script type="text/javascript">var tn_pse_widget_entry_url = "' . $widget_urls['entry'] . '";</script>';
   $output .= '<script type="text/javascript" src="' . $assets['js'] . '"></script>';
   $output .= '<link rel="stylesheet" type="text/css" href="' . $assets['css'] . '" />';
   $output .= '<div class="tn-pse-widget-container tn-pse-widget-view-' . $type . '">';
   $output .= ' <div class="tn-pse-widget-header"></div>';
 
-  // add view widget depending on $type
-  $output .= theme('pse_widget_view_container', $type, $widget_urls, $options);
+  // show view area if not button-only widget
+  if ($type <> 'button') {
+    // add view widget depending on $type
+    $output .= theme('pse_widget_view_container', $type, $widget_urls, $options);
+  }
 
   // add entry widget button and modal (hidden) dialog div
   $output .= theme('pse_widget_entry_container', $widget_urls, $options);
@@ -196,7 +243,7 @@ function theme_pse_widget_container($type, $widget_urls, $assets, $options) {
 function theme_pse_widget_view_container($type, $widget_urls, $options) {
   //generate view widget container and iframe
   $output = '<div class="widget-upper">';
-  $output .= ' <iframe class="view-widget" src="' . $widget_urls['view'] . '" frameborder="0"
+  $output .= ' <iframe class="tn-pse-widget-view-widget" src="' . $widget_urls['view'] . '" frameborder="0"
       style="width: 100%; height: ' . $options['height'] . 'px; border: none; overflow: hidden;"></iframe>';
   $output .= '</div>';
 
@@ -208,16 +255,16 @@ function theme_pse_widget_view_container($type, $widget_urls, $options) {
  * containing the contents of the entry widget.
  */
 function theme_pse_widget_entry_container($widget_urls, $options) {
-  $output = '<div class="widget-lower">';
-  $output .= ' <div class="grey-box"><p><strong>Are you involved in a community project? Want people to know?</strong></p>';
-  $output .= '   <a href="' . $widget_urls['entry nojs'] . '" class="entry-widget-launcher">';
+  $output = '<div class="tn-pse-widget-widget-lower">';
+  $output .= ' <div class="tn-pse-widget-grey-box"><p><strong>Are you involved in a community project? Want people to know?</strong></p>';
+  $output .= '   <a href="' . $widget_urls['entry nojs'] . '" class="tn-pse-widget-entry-widget-launcher">';
   $output .= '    <span>' . $options['add button text'] . '</span></a>';
   $output .= ' </div>';
   $output .= '</div>';
-  $output .= '<div class="modal-mask" style="display: none">';
-  $output .= ' <div class="modal-outer">';
-  $output .= '  <a href="#" class="modal-button-close">Close</a>';
-  $output .= '  <div class="modal-inner"><!-- iFrame with class "entry-widget" will be inserted here --></div>';
+  $output .= '<div class="tn-pse-widget-modal-mask" style="display: none">';
+  $output .= ' <div class="tn-pse-widget-modal-outer">';
+  $output .= '  <a href="#" class="tn-pse-widget-modal-button-close">Close</a>';
+  $output .= '  <div class="tn-pse-widget-modal-inner"><!-- iFrame with class "entry-widget" will be inserted here --></div>';
   $output .= ' </div>';
   $output .= '</div>';
   return $output;
@@ -228,7 +275,7 @@ function theme_pse_widget_entry_container($widget_urls, $options) {
  * Wraps widget interior
  */
 function theme_pse_widget_view_inner($content) {
-  return '<div class="inner">' . $content . '</div>';
+  return '<div class="tn-pse-widget-inner">' . $content . '</div>';
 }
 
 /**
@@ -241,10 +288,15 @@ function theme_pse_widget_entry_thanks() {
   $output .= '<p>We appreciate you taking the time to share what you are doing.</p>';
   $output .= '<p>You will receive an email confirmation about this project, as will the webmaster of the website you are visiting. Your project ';
   $output .= 'has been added as \'not live\' to your local webmaster\'s \'moderation\' queue, and they will take a look and approve it as soon ';
-  $output .= 'as possible. You will will receive an email confirmation about the webmaster\'s approval when it happens.</p>';
+  $output .= 'as possible. You will will receive an email confirmation about the webmaster\'s approval when it happens. You will also receive an ';
+  $output .= 'email from Transition Network asking you to confirm your user account. You need to confirm you account in order to make any edits ';
+  $output .= 'later, so please read this and confirm your account now.</p>';
   $output .= '<p>If you do not hear anything, please contact your local webmaster asking them to check their projects list, or ';
   $output .= '<a href="mailto:webproject@transitionnetwork.org">the Transition Network web project</a> asking what has happened.</p>';
-  $output .= '<p>Close this window and return to the local website you are visiting or you can go and ';
+
+  $output .= '<h4>Got another project?</h4><p> We\'d love to hear about it, please <a href="/pse/entry/add-project/' . arg(4) . '/' . arg(5) . '">add your other project</a> now too!</p>';
+
+  $output .= '<h4>Finished</h4><p>You can now close this window and return to the local website you are visiting or you can go and ';
   $output .= '<a href="http://www.transitionnetwork.org/projects" target="_blank" title="visit the full Projects Directory of community ';
   $output .= 'projects from across the world on the Transition Network website">other projects in the Transition Network Projects Directory</a>.</p>';
   return $output;

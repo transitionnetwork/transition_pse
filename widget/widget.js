@@ -38,19 +38,19 @@ if (typeof jQuery == 'undefined') {
   // use TN copy of jQuery, Google version at: https://ajax.googleapis.com/ajax/libs/jquery/1.3.2/jquery.min.js
   getScript('https://www.transitionnetwork.org/sites/all/modules/jquery_update/replace/jquery.js', function() {
   // jQuery now loaded
-  setUpModal();
+  tn_pse_widget_setUpModal();
   });
 }
 else {
   // jQuery already here, carry on
-  setUpModal();
+  tn_pse_widget_setUpModal();
 };
 
 
 /**
  * 2. Enable modal popup on button
  */
-function setUpModal() {
+function tn_pse_widget_setUpModal() {
   // belt and braces
   if (typeof jQuery == 'undefined') {
     alert('PSE: No jQuery loaded');
@@ -59,21 +59,21 @@ function setUpModal() {
 //jQuery(document)
   jQuery(document).ready(function() {
     // attach a click handler to the widget open button link
-    jQuery('.tn-pse-widget-container .entry-widget-launcher').click(function () {
+    jQuery('.tn-pse-widget-container .tn-pse-widget-entry-widget-launcher').click(function () {
       // insert entry widget iFrame if not already present
-      if (jQuery('.tn-pse-widget-container .entry-widget').length == 0) {
-        jQuery('.tn-pse-widget-container .modal-inner').append('<iframe class="entry-widget" frameborder="0" style="display: hidden; width: 100%; height: 100%; border: none; overflow: hidden;"></iframe>');
-        jQuery('.tn-pse-widget-container .entry-widget').attr('src', tn_pse_entry_widget_url);
-        jQuery('.tn-pse-widget-container .entry-widget').fadeIn(1200);
+      if (jQuery('.tn-pse-widget-container .tn-pse-widget-entry-widget').length == 0) {
+        jQuery('.tn-pse-widget-container .tn-pse-widget-modal-inner').append('<iframe class="tn-pse-widget-entry-widget" frameborder="0" style="display: hidden; width: 100%; height: 100%; border: none; overflow: hidden;"></iframe>');
+        jQuery('.tn-pse-widget-container .tn-pse-widget-entry-widget').attr('src', tn_pse_widget_entry_url);
+        jQuery('.tn-pse-widget-container .tn-pse-widget-entry-widget').fadeIn(1200);
       }
 
       // show modal overlay slowly-ish to allow it to load
-      jQuery('.tn-pse-widget-container .modal-mask').fadeIn(500);
+      jQuery('.tn-pse-widget-container .tn-pse-widget-modal-mask').fadeIn(500);
       return false;
     });
     // attach a click handler to the widget close link
-    jQuery('.tn-pse-widget-container .modal-button-close').click(function () {
-      jQuery('.tn-pse-widget-container .modal-mask').fadeOut();
+    jQuery('.tn-pse-widget-container .tn-pse-widget-modal-button-close').click(function () {
+      jQuery('.tn-pse-widget-container .tn-pse-widget-modal-mask').fadeOut();
     });
   });
 }

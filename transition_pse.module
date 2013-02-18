@@ -16,6 +16,9 @@ define('TRANSITION_PSE_CT', 'project_pse');
 // Radius (miles) when searching for nearby projects
 define('TRANSITION_PSE_RADIUS', '50');
 
+// Mailchimp ID for Widget Owners mailing list
+define('TRANSITION_PSE_MC_LID', '57fc02ca3d');
+
 /**
  * Implementation of hook_init().
  *
@@ -59,9 +62,10 @@ function transition_pse_menu() {
     'type' => MENU_CALLBACK,
   );
   // thanks page -- says thanks, shows their project, promotes TN
-  $items['pse/entry/add-project/thank-you'] = array(
+  $items['pse/entry/add-project/thank-you/%/%'] = array(
     // 'title' => 'Add your project',
     'page callback' => 'transition_pse_entry_thanks',
+    'page arguments' => array(4, 5),
     'access arguments' => array('access content'),
     'file' => 'transition_pse.pages.inc',
     'type' => MENU_CALLBACK,
@@ -100,7 +104,7 @@ function transition_pse_menu() {
   );
   // get widget code page
   $items['pse/widget/get'] = array(
-    'title' => 'Get the Project Sharing Engine widget!',
+    'title' => 'Get the Projects Widget!',
     'page callback' => 'transition_pse_widget_generate',
     'access arguments' => array('get widget code'),
     'file' => 'transition_pse.widget.inc',
@@ -185,7 +189,6 @@ function transition_pse_theme($existing, $type, $theme, $path) {
     'pse_widget_view_about' => array(
       'file' => 'transition_pse.widget.inc',
     ),
-
   );
 }
 

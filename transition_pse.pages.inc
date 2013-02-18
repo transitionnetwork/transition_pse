@@ -10,7 +10,7 @@
  * Implementation of hook_form_alter()
  *
  * when _transition_pse_overriding_form_flag is set, this removes all
- * non-mandatory items from the Project forms.
+ * non-mandatory items from the User forms.
  *
  * Also ensures all widet-submitted content is flagged for moderation
  */
@@ -105,7 +105,7 @@ function transition_pse_user_register_submit($form, &$form_state) {
 }
 
 /**
- * Implementation of hook_user()
+ * Implementation of hook_user().
  *
  * Ensures PSE registration/login submits go back to entry PSE form.
  * Also builds a username from first and last name elements for PSE.
@@ -170,7 +170,7 @@ function transition_pse_entry_page($participants) {
 /**
  * Form generation for PSE entry widget
  */
-function transition_pse_entry_form() {
+function transition_pse_entry_form($form_state) {
   $form = array();
   module_load_include('inc', 'maxlength');
   // Title
@@ -182,12 +182,12 @@ function transition_pse_entry_form() {
     '#weight' => 0,
   );
 
-  // Aim
+  // Summary
   $form['summary'] = array(
     '#type' => 'textarea',
     '#required' => '1',
-    '#title' => t('What is this project about?'),
-    '#description' => t('Provide a brief statement that describes the aim and background to your project.'),
+    '#title' => t('Please add a short summary of your project'),
+    //'#description' => t('Please provide a brief statement that describes the aim and background to your project.'),
     '#weight' => 1,
     '#max_length_properties' => array(
       'limit' => 300,
@@ -195,6 +195,16 @@ function transition_pse_entry_form() {
       'text' => t("!remaining of !limit characters remaining."),
     ),
   );
+
+  // Website @todo should use Link module, but can't find out how to show only URL!
+  // Damn crappy Drupal contrib documentation! Have to map to correct field now, and check it starts with
+  // http://
+  $form['website'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Project website'),
+    '#weight' => 2,
+  );
+
   // Location
   $form['locations'] = array(
     '#type' => 'location_element',
@@ -202,16 +212,17 @@ function transition_pse_entry_form() {
     '#title' => t('Location'),
     '#size' => '75',
     '#weight' => 5,
+    '#description' => t('Postcode does not have to be exact; the first half is fine.'),
     '#location_settings' => array(
       'form' => array(
         'fields' => array(
+          'country' => array('collect' => 2, 'default' => 'uk', 'weight' => 0),
+          'province' => array('collect' => 1, 'widget' => 'select', 'weight' => 1),
+          'city' => array('collect' => 2, 'weight' => 2),
+          'postal_code' => array('collect' => 2),
           'name' => array('collect' => 0),
           'street' => array('collect' => 0),
           'locpick' => array('collect' => 0),
-          'city' => array('collect' => 2),
-          'postal_code' => array('collect' => 2),
-          'province' => array('collect' => 1, 'widget' => 'autocomplete'),
-          'country' => array('collect' => 2, 'default' => 'uk'),
         ),
       ),
     )
@@ -225,12 +236,45 @@ function transition_pse_entry_form() {
     $options[$option[0]] = $option[1];
   }
   $form['project_type'] = array(
+    '#description' => t('A Transition project is directly related to a Transition Initiative'),
     '#type' => 'radios',
     '#title' => t(check_plain($field['widget']['label'])),
     '#default_value' => $field['widget']['default_value'][0]['value'],
     '#options' => $options ,
     '#weight' => 7,
   );
+
+  // add MailChimp list option, if available
+  if (FALSE) { //(module_exists('mailchimp')) {
+    global $user;
+    //$fprm = mailchimp_subscribe_auth_form($form_state, $user, FALSE, '' . TRANSITION_PSE_MC_LID);
+    //print_r($fprm);
+
+    $lists = _mailchimp_get_available_lists($user);
+    if (!empty($lists) && isset($lists[TRANSITION_PSE_MC_LID]) && $q = _mailchimp_get_api_object()) {
+      // wrap in a fieldset
+      $form['mailchimp_list_forms'] = array(
+        '#type' => 'fieldset',
+        '#title' => t('Newsletter'),
+        '#weight' => 8,
+      );
+
+      // container for the list objects we'll need on form submission
+      $form['mailchimp_lists'] = array(
+        '#type'   => 'value'
+      );
+
+      foreach ($lists as $list) {
+        if ($list->id !== TRANSITION_PSE_MC_LID) {
+          mailchimp_auth_newsletter_form($form['mailchimp_list_forms'], $list, NULL, $q);
+          $form['mailchimp_lists']['#value'][] = $list;
+        }
+      }
+      $form['mailchimp_lists']['wrapper' . TRANSITION_PSE_MC_LID]['mailchimp_list_' . TRANSITION_PSE_MC_LID]['#default_value'] = TRUE;
+      $form['#submit'][] = 'mailchimp_subscribe_auth_form_submit';
+    }
+  }
+
   $form['submit'] = array(
     '#type' => 'submit',
     '#value' => t('Submit your project!'),
@@ -243,7 +287,16 @@ function transition_pse_entry_form() {
  * Form validation for PSE entry widget
  */
 function transition_pse_entry_form_validate($form, &$form_state) {
-  //@todo add extra validation as it comes in here
+  // extra validation for link here
+  $website = $form_state['values']['website'];
+  if (!empty($website)) {
+    // validate link href with Link module function (this module has a dependency on Link).
+    $type = link_validate_url($website);
+    // only allow external links
+    if ($type != LINK_EXTERNAL) {
+      form_set_error('website', t('Not a valid external website URL.'));
+    }
+  }
 }
 
 /**
@@ -279,6 +332,8 @@ function transition_pse_entry_form_submit($form, &$form_state) {
   //@todo CHECK these may be bad assumptions!
   $node->field_submission_initiative[0]['nid'] = $participants['initiative']->nid;
   $node->field_submission_webmaster[0]['uid'] = $participants['account']->uid;
+  // website
+  $node->field_website_home[0]['url'] = $form_state['values']['website'];
 
   // Save this node and avoid this sending notifications
   $node->notifications_content_disable = 1;
@@ -299,7 +354,7 @@ function transition_pse_entry_form_submit($form, &$form_state) {
     drupal_mail('transition_pse', 'submitter_project_thanks', $user->mail, language_default(), $params);
 
     // and redirect to the thank you page when done
-    $redirect_to = 'pse/entry/add-project/thank-you' . '?done=' . uniqid();
+    $redirect_to = 'pse/entry/add-project/thank-you/' . arg(3) . '/' . arg(4) . '?done=' . uniqid();
     $_REQUEST['destination'] = $redirect_to;
   }
 }
@@ -365,7 +420,10 @@ function transition_pse_view_sidebar($participant_uid = 0, $initiative_nid = 0) 
   // get coordinates from initiative
   $coord_arg = _transition_pse_prepare_location_argument($participants);
   // load views module and execute
-
+  // hide admin nmenu
+  if (module_exists('admin_menu')) {
+    admin_menu_suppress();
+  }
   return theme(
     'pse_widget_view_inner',
     views_embed_view(
@@ -412,7 +470,10 @@ function transition_pse_view_full($participant_uid = 0, $initiative_nid = 0) {
   $quicktabs['tabs'] = $tabs;
   $quicktabs['ajax'] = TRUE;
   $quicktabs['hide title'] = TRUE;
-
+  // hide admin nmenu
+  if (module_exists('admin_menu')) {
+    admin_menu_suppress();
+  }
   // wrap tabs in wiget inner, allow theme override
   return theme('pse_widget_view_inner', theme('quicktabs', $quicktabs));
 }
@@ -550,7 +611,7 @@ function transition_pse_submitter_mail_text($type, &$message, $params) {
       $message['subject'] = t("Good news about your project submitted via the Transition Network widget!", array(), $language);
       $body .= t("You recently added a community project through the 'Project Sharing Engine' widget. We are pleased to say that the webmaster of the participating site has approved your project and it is now in the main Transition Network Projects Directory.\n\n", array(), $langcode);
       $body .= t(
-        "Project: @node_title\nLink: @node_link\n\nYou can edit this at any time -- please do! Please add some more information with details of the goals, outcomes, lessons etc. It all goes to making someone else's project learn from your experience.\n\nYou can log into the Transition Network site from your project page by clicking the 'My Account & Login' link in the top right corner of the page.\n\nHere is the link to your project profile again: @node_link\n\n",
+        "Project: @node_title\nLink: @node_link\n\nYou can edit this at any time -- please do! Please add some more information with details of the goals, outcomes, lessons etc. It all goes to making someone else's project learn from your experience.\n\nYou can log into the Transition Network site from your project page by clicking the 'My Account & Login' link in the top right corner of the page. REMEMBER: you need to have confirmed your email address to edit your project profile.\n\nHere is the link to your project profile again: @node_link\n\n",
         array(
           '@node_title' => $params['node']->title,
           '@node_link' => url('node/' . $params['node']->nid, array('absolute' => TRUE)),
