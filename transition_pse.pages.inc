@@ -14,7 +14,6 @@
  *
  * Also ensures all widet-submitted content is flagged for moderation
  */
-
 function transition_pse_form_alter(&$form, &$form_state, $form_id) {
   if (_transition_pse_overriding_form_flag() == TRUE) {
     switch ($form_id) {
@@ -53,19 +52,6 @@ function transition_pse_form_alter(&$form, &$form_state, $form_id) {
         // and redirect to the thank you page when done
         $redirect_to = 'pse/entry/add-project' . '?login=' . uniqid();
         $_REQUEST['destination'] = $redirect_to;
-
-        /*@todo change message on register:
-         * A validation e-mail has been sent to your e-mail address. In
-         * order to gain full access to the site, you will need to follow
-         * the instructions in that message.
-         *
-         * Login successful
-         *
-         * to something like:
-         * Thanks for registering! Please enter your project details below.
-         * You've also been sent a message asking you to confirm your email
-         * address, but we'd rather hear about your project right now!
-         */
         break;
     }
   }
@@ -197,8 +183,8 @@ function transition_pse_entry_form($form_state) {
   );
 
   // Website @todo should use Link module, but can't find out how to show only URL!
-  // Damn crappy Drupal contrib documentation! Have to map to correct field now, and check it starts with
-  // http://
+  // Damn crappy Drupal contrib documentation! Have to map to correct field now, and
+  // validate it later with Link module's link_validate_url().
   $form['website'] = array(
     '#type' => 'textfield',
     '#title' => t('Project website'),
@@ -245,34 +231,23 @@ function transition_pse_entry_form($form_state) {
   );
 
   // add MailChimp list option, if available
-  if (FALSE) { //(module_exists('mailchimp')) {
+  // @see Adapted from mailchimp_user() 'register' section
+  if (module_exists('mailchimp')) {
     global $user;
-    //$fprm = mailchimp_subscribe_auth_form($form_state, $user, FALSE, '' . TRANSITION_PSE_MC_LID);
-    //print_r($fprm);
-
     $lists = _mailchimp_get_available_lists($user);
-    if (!empty($lists) && isset($lists[TRANSITION_PSE_MC_LID]) && $q = _mailchimp_get_api_object()) {
-      // wrap in a fieldset
-      $form['mailchimp_list_forms'] = array(
-        '#type' => 'fieldset',
-        '#title' => t('Newsletter'),
-        '#weight' => 8,
-      );
-
-      // container for the list objects we'll need on form submission
-      $form['mailchimp_lists'] = array(
-        '#type'   => 'value'
-      );
-
-      foreach ($lists as $list) {
-        if ($list->id !== TRANSITION_PSE_MC_LID) {
-          mailchimp_auth_newsletter_form($form['mailchimp_list_forms'], $list, NULL, $q);
-          $form['mailchimp_lists']['#value'][] = $list;
-        }
-      }
-      $form['mailchimp_lists']['wrapper' . TRANSITION_PSE_MC_LID]['mailchimp_list_' . TRANSITION_PSE_MC_LID]['#default_value'] = TRUE;
-      $form['#submit'][] = 'mailchimp_subscribe_auth_form_submit';
-    }
+    // wrap in a fieldset
+    $form['mailchimp_list_forms'] = array(
+      '#type' => 'fieldset',
+      '#title' => t('Keep me updated about the widget'),
+      '#weight' => 8,
+    );
+    // get MC subscribe form, subscribe by default
+    $mcform = mailchimp_subscribe_auth_form($form_state, $user, FALSE, $lists[TRANSITION_PSE_MC_LID]);
+    $mcform['wrapper' . TRANSITION_PSE_MC_LID]['mailchimp_list_' . TRANSITION_PSE_MC_LID]['#default_value'] = TRUE;
+    // merge into our form
+    $form['mailchimp_list_forms'][] = $mcform['wrapper' . TRANSITION_PSE_MC_LID];
+    unset($mcform['wrapper' . TRANSITION_PSE_MC_LID]);
+    $form = array_merge($form, $mcform);
   }
 
   $form['submit'] = array(
@@ -289,8 +264,9 @@ function transition_pse_entry_form($form_state) {
 function transition_pse_entry_form_validate($form, &$form_state) {
   // extra validation for link here
   $website = $form_state['values']['website'];
-  if (!empty($website)) {
+  if (module_exists('link') && !empty($website)) {
     // validate link href with Link module function (this module has a dependency on Link).
+    // Smelly but effective.
     $type = link_validate_url($website);
     // only allow external links
     if ($type != LINK_EXTERNAL) {
@@ -329,7 +305,6 @@ function transition_pse_entry_form_submit($form, &$form_state) {
   // project type
   $node->field_project_org_type[0]['value'] = $form_state['values']['project_type'];
   // set related initiative as releated and web contact to widget owner
-  //@todo CHECK these may be bad assumptions!
   $node->field_submission_initiative[0]['nid'] = $participants['initiative']->nid;
   $node->field_submission_webmaster[0]['uid'] = $participants['account']->uid;
   // website
@@ -339,7 +314,21 @@ function transition_pse_entry_form_submit($form, &$form_state) {
   $node->notifications_content_disable = 1;
   node_save($node);
 
-  // if saved ok, send notifications
+  // subscribe user to mailchimp list
+  // @see Adapted from mailchimp_user() 'insert' section
+  if (module_exists('mailchimp') && $q = _mailchimp_get_api_object()) {
+    foreach ((array)$form_state['values']['lists'] as $list) {
+      // is the checkbox for the newsletter selected?
+      if (isset($form_state['values']['mailchimp_list_' . $list->id] ) && $form_state['values']['mailchimp_list_' . $list->id] ) {
+        $merge_vars = _mailchimp_load_user_list_mergevars($user->uid, $list->id, $q->listMergeVars($list->id));
+        $ret = _mailchimp_subscribe_user($list, $user->mail, $merge_vars, TRUE, $q);
+        if (!$ret) {
+          watchdog('mailchimp', 'MCAPI Error: %errormsg', array('%errormsg' => $q->errorMessage), WATCHDOG_ERROR);
+        }
+      }
+    }
+  }
+  // if saved ok, send email notifications (would love D7 Rules here... ;-) )
   if ($node->nid) {
     // tell webmaster about the new submission
     $params = array(
@@ -356,6 +345,27 @@ function transition_pse_entry_form_submit($form, &$form_state) {
     // and redirect to the thank you page when done
     $redirect_to = 'pse/entry/add-project/thank-you/' . arg(3) . '/' . arg(4) . '?done=' . uniqid();
     $_REQUEST['destination'] = $redirect_to;
+  }
+}
+
+/**
+ * Implementation of hook_locationapi().
+ *
+ * Location module... A lot of code just to change the title of the 'city' field,
+ * but hey ho...
+ */
+function transition_pse_locationapi(&$obj, $op, $a3 = NULL, $a4 = NULL, $a5 = NULL) {
+  if ($op == 'field_expand' && $a3 == 'city') {
+    return array(
+      '#type'           => 'textfield',
+      '#title'          => t('Nearest village/town/city'),
+      '#default_value'  => $obj,
+      '#size'           => 64,
+      '#maxlength'      => 255,
+      '#description'    => NULL,
+      '#attributes'     => NULL,
+      '#required'       => ($settings['collect'] == 2),
+    );
   }
 }
 
@@ -505,6 +515,15 @@ function _transition_pse_prepare_location_argument($participants) {
   $latitude = round($participants['initiative']->location['latitude'], 2);
   $longitude = round($participants['initiative']->location['longitude'], 2);
   return $latitude . ',' . $longitude . '_' . TRANSITION_PSE_RADIUS;
+}
+
+/**
+ * Wraps a static flag in a function so we know when we want to override a form
+ */
+function _transition_pse_overriding_form_flag($set = FALSE) {
+  static $flag = FALSE;
+  if ($set) $flag = TRUE;
+  return $flag;
 }
 
 /**

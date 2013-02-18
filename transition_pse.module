@@ -239,6 +239,8 @@ function transition_pse_submission_accept_action($submission) {
   // set related initiative as releated and web contact to widget owner
   $project->field_initiative[0]['nid'] = $submission->field_submission_initiative[0]['nid'];
   $project->field_webcontact_user[0]['uid'] = $submission->field_submission_webmaster[0]['uid'];
+  // set website
+  $project->field_website_home[0]['url'] = $submission->field_website_home[0]['url'];
   // set source as PSE
   $project->field_content_source[0]['value'] = 'Widget-PSE';
   // avoid this sending notifications
@@ -248,7 +250,6 @@ function transition_pse_submission_accept_action($submission) {
 
   // if saved ok, send notifications
   if ($project->nid) {
-
     // tell submitter about the new accepted project
     $author = user_load($project->uid);
     $params = array(
@@ -320,13 +321,4 @@ function template_preprocess_pse_widget_page(&$vars) {
   $tabs = theme('pse_widget_page_tabs', $step);
   $vars['header'] = theme('pse_widget_page_header', drupal_get_title(), $tabs);
   $vars['footer'] = theme('pse_widget_page_footer');
-}
-
-/**
- * Wraps a static flag in a function so we know when we want to override a form
- */
-function _transition_pse_overriding_form_flag($set = FALSE) {
-  static $flag = FALSE;
-  if ($set) $flag = TRUE;
-  return $flag;
 }
