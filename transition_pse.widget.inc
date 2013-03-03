@@ -307,23 +307,3 @@ function theme_pse_widget_entry_thanks() {
  *
  * @TODO: move this waffle to a .tpl.php file
  */
-function theme_pse_widget_view_about() {
-  $output = '<h3>Project Sharing Engine Alpha</h3><h4>What?</h4>';
-  $output .= '<p>The <strong>Project Sharing Engine</strong> is a service to present Transition projects from around the world on Transition ';
-  $output .= 'Initiatives\' own websites. It also enables people to add information about their own projects to the Transition Network projects ';
-  $output .= 'directory from Transition Initiatives\' own websites, without having to visit the Transition Network website.</p>';
-  $output .= '<h4>How?</h4>';
-  $output .= '<p>It is all done with a simple widget which can be placed onto a Transition Initiative website by that website\'s webmaster. ';
-  $output .= 'Then a visitor to that website can use the widgets to browse projects in the area, or around the world, and add their own. The ';
-  $output .= 'webmaster can then approve the project, making it live in the Transition Network\'s main Projects Directory. We want it to be ';
-  $output .= 'simple for the Transition Initiative webmaster to add a widget to their site, and we want it to be simple for a Transition ';
-  $output .= 'Initiative website visitor to add their project in a few minutes. </p>';
-  $output .= '<p>We think that\'s done. We are working with a community of \'Transition webmasters\' to help develop the service. They are called ';
-  $output .= 'the \'alpha web masters\' as they have agreed to try the early version of the widget which you are looking at now.</p>';
-  $output .= '<h4>Why?</h4><p>Community activists around the world are doing their best to do great projects and we want to help. We want to help ';
-  $output .= 'projects share knowledge about, and contacts for, community projects around the world, as easily and simply as possible. We don\'t ';
-  $output .= 'want people to have to come to our website, we want them to stay on their own local sites and share their knowledge from there. So ';
-  $output .= 'they can spend more time locally. We also hope that this will provide Transition Initiatives\' websites with inspiring content from ';
-  $output .= 'around and beyond the Transition movement, thereby making their sites even better.</p>';
-  return $output;
-}

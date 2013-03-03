@@ -95,9 +95,9 @@ function transition_pse_menu() {
     'file' => 'transition_pse.pages.inc',
     'type' => MENU_CALLBACK,
   );
-  $items['pse/view/full/about'] = array(
+  $items['pse/view/about'] = array(
     'title' => 'About the PSE',
-    'page callback' => 'transition_pse_view_full_about',
+    'page callback' => 'transition_pse_view_about',
     'access arguments' => array('access content'),
     'file' => 'transition_pse.pages.inc',
     'type' => MENU_CALLBACK,
@@ -187,7 +187,8 @@ function transition_pse_theme($existing, $type, $theme, $path) {
       'file' => 'transition_pse.widget.inc',
     ),
     'pse_widget_view_about' => array(
-      'file' => 'transition_pse.widget.inc',
+      'template' => 'pse-page-view-about',
+      'path' => $path,
     ),
   );
 }
@@ -316,7 +317,9 @@ function template_preprocess_pse_widget_page(&$vars) {
     // logged in
     $step = 2;
   }
-  else $step = 1;
+  else {
+    $step = 1;
+  }
   // build tabs
   $tabs = theme('pse_widget_page_tabs', $step);
   $vars['header'] = theme('pse_widget_page_header', drupal_get_title(), $tabs);
