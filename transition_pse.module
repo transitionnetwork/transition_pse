@@ -175,9 +175,16 @@ function transition_pse_theme($existing, $type, $theme, $path) {
       'arguments' => array('widget_urls' => NULL, 'options' => NULL),
       'file' => 'transition_pse.widget.inc',
     ),
+    // thanks page
     'pse_widget_entry_thanks' => array(
       'file' => 'transition_pse.widget.inc',
     ),
+    'pse_widget_entry_thanks_content' => array(
+      'template' => 'pse-page-entry-thanks-content',
+      'arguments' => array('submit_another_url' => NULL),
+      'path' => $path,
+    ),
+    // widget structure
     'pse_widget_view_container' => array(
       'arguments' => array('type' => NULL, 'widget_urls' => NULL, 'options' => NULL),
       'file' => 'transition_pse.widget.inc',
@@ -186,6 +193,7 @@ function transition_pse_theme($existing, $type, $theme, $path) {
       'arguments' => array('content' => NULL),
       'file' => 'transition_pse.widget.inc',
     ),
+    // about tab
     'pse_widget_view_about' => array(
       'template' => 'pse-page-view-about',
       'path' => $path,

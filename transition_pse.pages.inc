@@ -491,7 +491,7 @@ function transition_pse_view_full($participant_uid = 0, $initiative_nid = 0) {
   $tabs['info'] = array(
     'title' => t('About'),
     'type' => 'callback',
-    'path' => 'pse/view/full/about',
+    'path' => 'pse/view/about',
   );
   $quicktabs['qtid'] = 'tn-pse-view-full-tabs';
   $quicktabs['tabs'] = $tabs;
@@ -519,7 +519,7 @@ function transition_pse_view_full_search() {
 /**
  * Menu callback for 'About' quicktab on full widget
  */
-function transition_pse_view_full_about() {
+function transition_pse_view_about() {
   return theme('pse_widget_view_about');
 }
 

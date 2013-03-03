@@ -280,30 +280,9 @@ function theme_pse_widget_view_inner($content) {
 
 /**
  * Theme function for thank you page.
- *
- * @TODO: move this waffle to a .tpl.php file
  */
 function theme_pse_widget_entry_thanks() {
-  $output = '<h3>Thank you for adding your project</h3>';
-  $output .= '<p>We appreciate you taking the time to share what you are doing.</p>';
-  $output .= '<p>You will receive an email confirmation about this project, as will the webmaster of the website you are visiting. Your project ';
-  $output .= 'has been added as \'not live\' to your local webmaster\'s \'moderation\' queue, and they will take a look and approve it as soon ';
-  $output .= 'as possible. You will will receive an email confirmation about the webmaster\'s approval when it happens. You will also receive an ';
-  $output .= 'email from Transition Network asking you to confirm your user account. You need to confirm you account in order to make any edits ';
-  $output .= 'later, so please read this and confirm your account now.</p>';
-  $output .= '<p>If you do not hear anything, please contact your local webmaster asking them to check their projects list, or ';
-  $output .= '<a href="mailto:webproject@transitionnetwork.org">the Transition Network web project</a> asking what has happened.</p>';
+  $submit_another_url = '/pse/entry/add-project/' . arg(4) . '/' . arg(5);
+  return theme('pse_widget_entry_thanks_content', $submit_another_url);
 
-  $output .= '<h4>Got another project?</h4><p> We\'d love to hear about it, please <a href="/pse/entry/add-project/' . arg(4) . '/' . arg(5) . '">add your other project</a> now too!</p>';
-
-  $output .= '<h4>Finished</h4><p>You can now close this window and return to the local website you are visiting or you can go and ';
-  $output .= '<a href="http://www.transitionnetwork.org/projects" target="_blank" title="visit the full Projects Directory of community ';
-  $output .= 'projects from across the world on the Transition Network website">other projects in the Transition Network Projects Directory</a>.</p>';
-  return $output;
 }
-
-/**
- * Theme function for about details.
- *
- * @TODO: move this waffle to a .tpl.php file
- */
