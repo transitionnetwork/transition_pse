@@ -7,110 +7,6 @@
  */
 
 /**
- * Implementation of hook_form_alter()
- *
- * when _transition_pse_overriding_form_flag is set, this removes all
- * non-mandatory items from the User forms.
- *
- * Also ensures all widet-submitted content is flagged for moderation
- */
-function transition_pse_form_alter(&$form, &$form_state, $form_id) {
-  if (_transition_pse_overriding_form_flag() == TRUE) {
-    switch ($form_id) {
-      case "user_register":
-        _transition_pse_hide_non_manadatory_elements($form);
-
-        // hide username since it will be auto-created from first/last name on user save
-        // but for now make it unique to get through safely
-        $form['account']['name']['#type'] = 'hidden';
-        $form['account']['name']['#default_value'] = 'PSEUSER--' . uniqid();
-        unset($form['account']['pass']['#type']);
-
-        // email tweak message
-        $form['account']['mail']['#description'] = t('We will not use your email address for anything else, nor give it to anyone else. ') . $form['account']['mail']['#description'];
-
-        // hide unneeded newsletter
-        // @BUG see: https://tech.transitionnetwork.org/trac/ticket/447
-        $form['mailchimp_list_forms']['wrapper1b720da06c']['#access'] = FALSE;
-
-        // stop LoginToboggan doing its stuff
-        $logintoboggan_index = array_search('logintoboggan_user_register_validate', $form['#validate']);
-        if ($logintoboggan_user_login_validate !== FALSE) {
-          unset($form['#validate'][$logintoboggan_index]);
-        }
-
-        // ensure we can build username on submit
-        array_unshift($form['#submit'], 'transition_pse_user_register_submit');
-
-        // remove field_roles_offered, field_initiative and field_themes from
-        // display/validation
-        $form['group_user_interest']['field_roles_offered']['#type'] = 'optionwidgets_select';
-        $form['group_user_interest']['field_roles_offered']['#access'] = FALSE;
-        unset($form['group_user_interest']['field_initiative']);
-        unset($form['group_user_interest']['field_themes']);
-
-        // and redirect to the thank you page when done
-        $redirect_to = 'pse/entry/add-project' . '?login=' . uniqid();
-        $_REQUEST['destination'] = $redirect_to;
-        break;
-    }
-  }
-}
-
-/**
- * User registraton submit callback
- *
- * Builds a unique username based on first & last name, avoiding collisions
- */
-function transition_pse_user_register_submit($form, &$form_state) {
-  // build username from first & last names
-  $first_name = $form_state['content_profile_registration']['profile']['node']->field_name_first[0]['value'];
-  $last_name .= $form_state['content_profile_registration']['profile']['node']->field_name_last[0]['value'];
-  // make alphanumeric only, set proper noun capitalisation
-  $full_name = preg_replace("/[^a-zA-Z0-9]+/", "", $full_name);
-  $full_name = ucwords(strtolower($first_name . ' ' . $last_name));
-  // then ensure not too long after making space for 'counter' on end
-  if (strlen($full_name) >= USERNAME_MAX_LENGTH - 3) $name = substr($name, 0, USERNAME_MAX_LENGTH - 3);
-
-  // ensure username is unique
-  $attempt = 0;
-  $append = '';
-  while (!$suceess && $attempt < 256) {
-    // add attempt number to end of username if not unique - e.g. "John Smith 2"
-    if ($attempt > 0) $append = ' ' . dechex($attempt);
-
-    $result = db_query("SELECT name FROM {users} u WHERE u.name = '%s'", $full_name . $append);
-    if (db_fetch_array($result) === FALSE) {
-      // found a unique name, use it!
-      $form_state['values']['name'] = $full_name . $append;
-      break;
-    }
-    // otherwise carry on up to 0xff appended to name... or 256 chances.
-    $attempt++;
-  }
-}
-
-/**
- * Implementation of hook_user().
- *
- * Ensures PSE registration/login submits go back to entry PSE form.
- * Also builds a username from first and last name elements for PSE.
- */
-function transition_pse_user($op, &$edit, &$account, $category = NULL) {
-  // only for PSE entry widget
-  if (arg(0) <> 'pse' || arg(1) <> 'entry') return;
-
-  switch ($op) {
-    case 'login':
-    case 'register':
-      // redirect login/form to itself for PSE only
-      // build url with hex timestamp to minise caching issues
-      $_REQUEST['destination'] = request_uri() . '?' . $op . '=' . uniqid();
-      break;
-  }
-}
-
-/**
  * Builds and modifies the Project entry form
  */
 function transition_pse_entry_form_steps($participant_uid = 0, $initiative_nid = 0) {
@@ -355,42 +251,6 @@ function transition_pse_entry_form_submit($form, &$form_state) {
 }
 
 /**
- * Implementation of hook_locationapi().
- *
- * Location module... A lot of code just to change the title of the 'city' field,
- * but hey ho...
- */
-function transition_pse_locationapi(&$obj, $op, $a3 = NULL, $a4 = NULL, $a5 = NULL) {
-  if ($op == 'field_expand' ) {
-    switch ($a3) {
-      case 'city':
-        return array(
-          '#type'           => 'textfield',
-          '#title'          => t('Nearest village/town/city'),
-          '#default_value'  => $obj,
-          '#size'           => 64,
-          '#maxlength'      => 255,
-          '#description'    => NULL,
-          '#attributes'     => NULL,
-          '#required'       => ($settings['collect'] == 2),
-        );
-        break;
-      case 'postal_code':
-        return array(
-          '#type'           => 'textfield',
-          '#title'          => t('Postal code'),
-          '#description' => t('Postcode does not have to be exact; the first half is fine.'),
-          '#default_value'  => $obj,
-          '#size'           => 16,
-          '#maxlength'      => 16,
-          '#required'       => ($settings['collect'] == 2),
-        );
-        break;
-    }
-  }
-}
-
-/**
  * Builds a unified login/registration page
  *
  * adapted from Login Toboggan patch at:
@@ -536,15 +396,6 @@ function _transition_pse_prepare_location_argument($participants) {
   $latitude = round($participants['initiative']->location['latitude'], 2);
   $longitude = round($participants['initiative']->location['longitude'], 2);
   return $latitude . ',' . $longitude . '_' . TRANSITION_PSE_RADIUS;
-}
-
-/**
- * Wraps a static flag in a function so we know when we want to override a form
- */
-function _transition_pse_overriding_form_flag($set = FALSE) {
-  static $flag = FALSE;
-  if ($set) $flag = TRUE;
-  return $flag;
 }
 
 /**
