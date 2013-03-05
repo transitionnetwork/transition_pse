@@ -234,6 +234,7 @@ function transition_pse_entry_form($form_state) {
 
   // add MailChimp list option, if available
   // @see Adapted from mailchimp_user() 'register' section
+  /*
   if (module_exists('mailchimp')) {
     global $user;
     $lists = _mailchimp_get_available_lists($user);
@@ -251,6 +252,7 @@ function transition_pse_entry_form($form_state) {
     unset($mcform['wrapper' . TRANSITION_PSE_MC_LID]);
     $form = array_merge($form, $mcform);
   }
+  */
 
   $form['submit'] = array(
     '#type' => 'submit',
@@ -318,7 +320,8 @@ function transition_pse_entry_form_submit($form, &$form_state) {
 
   // subscribe user to mailchimp list
   // @see Adapted from mailchimp_user() 'insert' section
-  if (module_exists('mailchimp') && $q = _mailchimp_get_api_object()) {
+  /*
+   * if (module_exists('mailchimp') && $q = _mailchimp_get_api_object()) {
     foreach ((array)$form_state['values']['lists'] as $list) {
       // is the checkbox for the newsletter selected?
       if (isset($form_state['values']['mailchimp_list_' . $list->id] ) && $form_state['values']['mailchimp_list_' . $list->id] ) {
@@ -330,6 +333,7 @@ function transition_pse_entry_form_submit($form, &$form_state) {
       }
     }
   }
+  * */
   // if saved ok, send email notifications (would love D7 Rules here... ;-) )
   if ($node->nid) {
     // tell webmaster about the new submission

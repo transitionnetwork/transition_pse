@@ -186,7 +186,10 @@ function transition_pse_widget_web_widgets_embed_code($code, $style) {
   $form = array(
     '#type' => 'textarea',
     '#title' => t('Embed code'),
-    '#description' => t('Copy and paste ALL this code to your website.'),
+    '#description' => t(
+      'Copy and paste ALL of this code to your website. Please note that by embedding the widget into your site, you are agreeing to our <a href="!link">terms and conditions</a>.',
+      array('!link' => url('terms'))
+    ),
     '#id' => 'web_widgets_'. $num++,
     '#name' => 'web_widgets',
     '#value' => $code,
