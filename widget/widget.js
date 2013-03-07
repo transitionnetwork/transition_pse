@@ -20,7 +20,7 @@ if (typeof jQuery == 'undefined') {
   function getScript(url, success) {
     var script = document.createElement('script');
     script.src = url;
-    script.async = true;
+    // script.async = true;
     var head = document.getElementsByTagName('head')[0],
     done = false;
 
