@@ -91,8 +91,8 @@ function transition_pse_widget_generate($account_uid = -1, $type = 'sidebar', $i
     );
     // set up widget asset paths
     $assets = array(
-      'js' => $base_url . $path . '/widget/widget.js',
-      'css' => $base_url . $path . '/widget/widget.css',
+      'js' => $base_url_insecure . $path . '/widget/widget.js',
+      'css' => $base_url_insecure . $path . '/widget/widget.css',
     );
 
     // build widget HTML, put into page
