@@ -18,8 +18,9 @@
 // Only do anything if jQuery isn't defined
 if (typeof jQuery == 'undefined') {
   function getScript(url, success) {
-    var script   = document.createElement('script');
+    var script = document.createElement('script');
     script.src = url;
+    script.async = true;
     var head = document.getElementsByTagName('head')[0],
     done = false;
 
@@ -33,10 +34,11 @@ if (typeof jQuery == 'undefined') {
         head.removeChild(script);
       };
     };
+    // add to head
     head.appendChild(script);
   };
   // use TN copy of jQuery, Google version at: https://ajax.googleapis.com/ajax/libs/jquery/1.3.2/jquery.min.js
-  getScript('https://www.transitionnetwork.org/sites/all/modules/jquery_update/replace/jquery.js', function() {
+  getScript('https://www.transitionnetwork.org/sites/all/modules/contrib/jquery_update/replace/jquery.js', function() {
   // jQuery now loaded
   tn_pse_widget_setUpModal();
   });
