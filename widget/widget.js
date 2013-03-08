@@ -60,22 +60,36 @@ function tn_pse_widget_setUpModal() {
   }
 //jQuery(document)
   jQuery(document).ready(function() {
-    // attach a click handler to the widget open button link
-    jQuery('.tn-pse-widget-container .tn-pse-widget-entry-widget-launcher').click(function () {
-      // insert entry widget iFrame if not already present
-      if (jQuery('.tn-pse-widget-container .tn-pse-widget-entry-widget').length == 0) {
-        jQuery('.tn-pse-widget-container .tn-pse-widget-modal-inner').append('<iframe class="tn-pse-widget-entry-widget" frameborder="0" style="display: hidden; width: 100%; height: 100%; border: none; overflow: hidden;"></iframe>');
-        jQuery('.tn-pse-widget-container .tn-pse-widget-entry-widget').attr('src', tn_pse_widget_entry_url);
-        jQuery('.tn-pse-widget-container .tn-pse-widget-entry-widget').fadeIn(1200);
-      }
 
-      // show modal overlay slowly-ish to allow it to load
-      jQuery('.tn-pse-widget-container .tn-pse-widget-modal-mask').fadeIn(500);
+    // attach a click handler to the widget entry 'add' button link
+    jQuery('.tn-pse-widget-container .tn-pse-widget-entry-widget-launcher').click(function () {
+      // display the entry url
+      tn_pse_widget_showModal(tn_pse_widget_entry_url);
       return false;
     });
+
+    // attach a click handler to the widget about button link
+    jQuery('.tn-pse-widget-container .tn-pse-widget-about-widget-launcher').click(function () {
+      // display the entry url
+      tn_pse_widget_showModal(tn_pse_widget_about_url);
+      return false;
+    });
+
     // attach a click handler to the widget close link
     jQuery('.tn-pse-widget-container .tn-pse-widget-modal-button-close').click(function () {
       jQuery('.tn-pse-widget-container .tn-pse-widget-modal-mask').fadeOut();
     });
   });
+}
+
+function tn_pse_widget_showModal(target_url) {
+  // insert entry widget iFrame if not already present
+  if (jQuery('.tn-pse-widget-container .tn-pse-widget-modal-frame').length == 0) {
+    jQuery('.tn-pse-widget-container .tn-pse-widget-modal-inner').append('<iframe class="tn-pse-widget-modal-frame" frameborder="0" style="display: hidden; width: 100%; height: 100%; border: none; overflow: hidden;"></iframe>');
+  }
+  // set url
+  jQuery('.tn-pse-widget-container .tn-pse-widget-modal-frame').attr('src', target_url);
+  // show modal overlay slowly-ish to allow it to load
+  jQuery('.tn-pse-widget-container .tn-pse-widget-modal-frame').fadeIn(1200);
+  jQuery('.tn-pse-widget-container .tn-pse-widget-modal-mask').fadeIn(500);
 }

@@ -331,7 +331,7 @@ function transition_pse_theme($existing, $type, $theme, $path) {
       'path' => $path,
     ),
     'pse_widget_entry_container' => array(
-      'arguments' => array('widget_urls' => NULL, 'options' => NULL),
+      'arguments' => array('type' => NULL, 'widget_urls' => NULL, 'options' => NULL),
       'file' => 'transition_pse.widget.inc',
     ),
     // thanks page

@@ -86,6 +86,7 @@ function transition_pse_widget_generate($account_uid = -1, $type = 'sidebar', $i
     $base_url_insecure = str_replace('https:', 'http:', $base_url);
     $widget_urls = array(
       'view' => $base_url_insecure . "/pse/view/$type/$account_uid/$initiative_id",
+      'about' => $base_url_insecure . "/pse/about",
       'entry' => $base_url_secure . "/pse/entry/add-project/$account_uid/$initiative_id",
       'entry nojs' => $base_url_secure . "/pse/entry/add-project/$account_uid/$initiative_id",
     );
@@ -236,7 +237,7 @@ function transition_pse_widget_generate_options_form_submit($form, &$form_state)
 function theme_pse_widget_container($type, $widget_urls, $assets, $options) {
   // build wrapper and include assets
   $output = '<!-- TN-PSE: widget begin -->';
-  $output .= '<script type="text/javascript">var tn_pse_widget_entry_url = "' . $widget_urls['entry'] . '";</script>';
+  $output .= '<script type="text/javascript">var tn_pse_widget_entry_url = "' . $widget_urls['entry'] . '"; var tn_pse_widget_about_url = "' . $widget_urls['about'] . '";</script>';
   $output .= '<script type="text/javascript" src="' . $assets['js'] . '"></script>';
   $output .= '<link rel="stylesheet" type="text/css" href="' . $assets['css'] . '" />';
   $output .= '<div class="tn-pse-widget-container tn-pse-widget-view-' . $type . '">';
@@ -249,7 +250,7 @@ function theme_pse_widget_container($type, $widget_urls, $assets, $options) {
   }
 
   // add entry widget button and modal (hidden) dialog div
-  $output .= theme('pse_widget_entry_container', $widget_urls, $options);
+  $output .= theme('pse_widget_entry_container', $type, $widget_urls, $options);
 
   // finish up
   $output .= '</div><!-- TN-PSE: widget end -->';
@@ -274,11 +275,16 @@ function theme_pse_widget_view_container($type, $widget_urls, $options) {
  * Builds Entry widget button & hidden modal dialogue including and iFrame
  * containing the contents of the entry widget.
  */
-function theme_pse_widget_entry_container($widget_urls, $options) {
+function theme_pse_widget_entry_container($type, $widget_urls, $options) {
   $output = '<div class="tn-pse-widget-widget-lower">';
   $output .= ' <div class="tn-pse-widget-grey-box"><p><strong>Are you involved in a community project? Want people to know?</strong></p>';
   $output .= '   <a href="' . $widget_urls['entry nojs'] . '" class="tn-pse-widget-entry-widget-launcher">';
   $output .= '    <span>' . $options['add button text'] . '</span></a>';
+
+  // show 'about' link here if not full widget
+  if ($type != 'full') {
+    $output .= '   <p class="tn-pse-widget-about"><a href="' . $widget_urls['about'] . '" class="tn-pse-widget-about-widget-launcher">About this widget</a></p>';
+  }
   $output .= ' </div>';
   $output .= '</div>';
   $output .= '<div class="tn-pse-widget-modal-mask" style="display: none">';
