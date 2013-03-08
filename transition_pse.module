@@ -95,6 +95,7 @@ function transition_pse_menu() {
     'file' => 'transition_pse.pages.inc',
     'type' => MENU_CALLBACK,
   );
+  // view pages -- about
   $items['pse/view/about'] = array(
     'title' => 'About the PSE',
     'page callback' => 'transition_pse_view_about',
@@ -108,6 +109,24 @@ function transition_pse_menu() {
     'page callback' => 'transition_pse_widget_generate',
     'access arguments' => array('get widget code'),
     'file' => 'transition_pse.widget.inc',
+    'type' => MENU_CALLBACK,
+  );
+  // accept project submission
+  $items['pse/submission/*/accept'] = array(
+    'title' => 'Accept project submission',
+    'page callback' => 'transition_pse_submission_accept',
+    'page arguments' => array(2),
+    'access arguments' => array('get widget code'),
+    'file' => 'transition_pse.review.inc',
+    'type' => MENU_CALLBACK,
+  );
+  // reject project submission
+  $items['pse/submission/*/reject'] = array(
+    'title' => 'Reject project submission',
+    'page callback' => 'transition_pse_submission_reject',
+    'page arguments' => array(2),
+    'access arguments' => array('get widget code'),
+    'file' => 'transition_pse.review.inc',
     'type' => MENU_CALLBACK,
   );
   return $items;
