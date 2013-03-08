@@ -1,9 +1,8 @@
-; $Id$
 name = "Transition Project Sharing Engine"
 description = "Provides core logic and pages for the PSE"
 package = "Transition Network"
 
-version = "6.x-1.0-alpha3"
+version = "6.x-1.0-beta1"
 core = "6.x"
 
 dependencies[] = "content"

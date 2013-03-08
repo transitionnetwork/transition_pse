@@ -249,7 +249,7 @@ function transition_pse_newsletter_form_submit($form, &$form_state) {
   if (module_exists('mailchimp') && $q = _mailchimp_get_api_object()) {
     foreach ((array)$form_state['values']['lists'] as $list) {
       // is the checkbox for the newsletter selected?
-      if (isset($form_state['values']['mailchimp_list_' . $list->id]) $form_state['values']['mailchimp_list_' . $list->id]) {
+      if (isset($form_state['values']['mailchimp_list_' . $list->id]) && $form_state['values']['mailchimp_list_' . $list->id]) {
         // subscribe
         $merge_vars = _mailchimp_load_user_list_mergevars($user->uid, $list->id, $q->listMergeVars($list->id));
         $ret = _mailchimp_subscribe_user($list, $user->mail, $merge_vars, TRUE, $q);
@@ -483,89 +483,4 @@ function _transition_pse_participants_load($participant_uid, $initiative_nid) {
     $participants['account'] = $account;
   }
   return $participants;
-}
-
-/**
- * Creates the $message for a submitting user an accept or reject message, based
- * on $params['node'] and $params['author'].
- */
-function transition_pse_submitter_mail_text($type, &$message, $params) {
-  // get language, add standard start to message
-  $langcode = isset($message['language']) ? $message['language']->language : NULL;
-  $body = t("Dear @author_name,\n\n", array('@author_name' => $params['author']->name), $langcode);
-
-  switch ($type) {
-    // thank you body
-    case 'thanks':
-      $message['subject'] = t("Thank you for your project submission!", array(), $language);
-      $body .= t("Thank you for adding your community project through the Transition Network projects widget. We appreciate you taking the time to share what you know about what you are up to.\n\n", array(), $langcode);
-      $body .= t(
-        "Your project, @node_title, is not published yet; the webmaster of the Transition Initiative website hosting the widget needs to give it a quick check before it is published. ",
-        array(
-          '@node_title' => $params['node']->title,
-        ),
-        $language
-      );
-      $body .= t("The webmaster has received an email asking them to do this. Once they have checked it, you will receive an email confirmation letting you know whether it has been approved or not.\n\n", array(), $langcode);
-      $body .= t("We are confident that your project is good, but you can imagine that we need to check things that come into the directory to make sure that they are not spam. Your patience is appreciated.\n\n", array(), $langcode);
-      break;
-
-    // accepted message body
-    case 'accepted':
-      $message['subject'] = t("Good news about your project submitted via the Transition Network widget!", array(), $language);
-      $body .= t("You recently added a community project through the 'Project Sharing Engine' widget. We are pleased to say that the webmaster of the participating site has approved your project and it is now in the main Transition Network Projects Directory.\n\n", array(), $langcode);
-      $body .= t(
-        "Project: @node_title\nLink: @node_link\n\nYou can edit this at any time -- please do! Please add some more information with details of the goals, outcomes, lessons etc. It all goes to making someone else's project learn from your experience.\n\nYou can log into the Transition Network site from your project page by clicking the 'My Account & Login' link in the top right corner of the page. REMEMBER: you need to have confirmed your email address to edit your project profile.\n\nHere is the link to your project profile again: @node_link\n\n",
-        array(
-          '@node_title' => $params['node']->title,
-          '@node_link' => url('node/' . $params['node']->nid, array('absolute' => TRUE)),
-        ),
-        $langcode
-      );
-      break;
-
-    // rejected message body
-    case 'rejected':
-      $message['subject'] = t("Your project submission to the Transition Network widget", array(), $language);
-      $body .= t("You added a community project through the 'Project Sharing Engine' widget on a participating website. We are sorry to say that it has not been added to the Transition Network Projects Directory.\n\nIf you have any queries about this, please contact the Transition Network web project at webproject@transitionnetwork.org.\n\n", array(), $language);
-      break;
-
-  }
-  // finish up
-  $body .= t("Thank you and all the best,\n\nThe web team at the Transition Web Project.", array(), $langcode);
-  $message['body'][] = $body;
-}
-
-/**
- * Sends a webmaster (widget owner) notification of new submission, or a
- * reminder, based on $params['node'] and $params['webmaster'].
- */
-function transition_pse_webmaster_mail_text($type, &$message, $params) {
-    // get language, add standard start to message
-  $langcode = isset($message['language']) ? $message['language']->language : NULL;
-  $body = t("Hi @author_name,\n\n", array('@author_name' => $params['webmaster']->name), $langcode);
-  // new message body
-  if ($type == 'new') {
-    $message['subject'] = t("New project submission via your PSE widget", array(), $language);
-    $body .= t("Someone has added a project through the widget on your website. Please follow the moderation link below, check the submission and approve it if it is suitable. If it is not suitable, please do reject it! This will take less than two minutes.\n\n", array(), $langcode);
-  }
-  // reminder message body
-  if ($type == 'reminder') {
-    $message['subject'] = t("Reminder of project submission via your PSE widget", array(), $language);
-    $body .= t("Someone added a project through the widget on your website one week ago, and we don't think that you have checked it yet. Please can you take 2 minutes to check it?\n\nPlease follow the link below, check the submission and approve it if it is suitable. If it is not suitable, please do reject it!\n\n", array(), $language);
-  }
-
-  // add info & links
-  $body .= t(
-    "Project: @node_title\nModeration: @moderation_link\nLog in: @login_link\n\n",
-    array(
-      '@node_title' => $params['node']->title,
-      '@moderation_link' => url('user/' . $params['webmaster']->uid . '/widget-moderation', array('absolute' => TRUE)),
-      '@login_link' => url('user/login', array('absolute' => TRUE)),
-    ),
-    $langcode
-  );
-  // closing gambit
-  $body .= t("Thanks again for hosting a Transition Projects Widget, and taking the time to check the project.\n\nThank you and all the best,\n\nThe web team at the Transition Web Project.", array(), $langcode);
-  $message['body'][] = $body;
 }

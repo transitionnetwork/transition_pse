@@ -112,21 +112,21 @@ function transition_pse_menu() {
     'type' => MENU_CALLBACK,
   );
   // accept project submission
-  $items['pse/submission/*/accept'] = array(
+  $items['pse/submission/%/accept'] = array(
     'title' => 'Accept project submission',
     'page callback' => 'transition_pse_submission_accept',
     'page arguments' => array(2),
     'access arguments' => array('get widget code'),
-    'file' => 'transition_pse.review.inc',
+    'file' => 'transition_pse.moderation.inc',
     'type' => MENU_CALLBACK,
   );
   // reject project submission
-  $items['pse/submission/*/reject'] = array(
+  $items['pse/submission/%/reject'] = array(
     'title' => 'Reject project submission',
     'page callback' => 'transition_pse_submission_reject',
     'page arguments' => array(2),
     'access arguments' => array('get widget code'),
-    'file' => 'transition_pse.review.inc',
+    'file' => 'transition_pse.moderation.inc',
     'type' => MENU_CALLBACK,
   );
   return $items;
@@ -276,7 +276,7 @@ function transition_pse_locationapi(&$obj, $op, $a3 = NULL, $a4 = NULL, $a5 = NU
  * Implementation of hook_mail()
  */
 function transition_pse_mail($key, &$message, $params) {
-  module_load_include('inc', 'transition_pse', 'transition_pse.pages');
+  module_load_include('inc', 'transition_pse', 'transition_pse.moderation');
 
   global $user;
   // set language from message
@@ -358,116 +358,6 @@ function transition_pse_theme($existing, $type, $theme, $path) {
       'path' => $path,
     ),
   );
-}
-
-/**
- * Implementation of hook_action_info().
- *
- * Provides 'accept' and 'reject' moderations actions for PSE submissions
- */
-function transition_pse_action_info() {
-   return array(
-    'transition_pse_submission_reject_action' => array(
-      'type' => 'node',
-      'label' => t('Reject and delete project submission'),
-      'configurable' => FALSE,
-      'behavior' => array('changes_property'),
-      'triggers' => array('node_presave'),
-    ),
-    'transition_pse_submission_accept_action' => array(
-      'type' => 'node',
-      'label' => t('Accept and publish project submission'),
-      'configurable' => FALSE,
-      'behavior' => array('changes_property'),
-      'triggers' => array('node_presave'),
-    ),
-  );
-}
-
-/**
- * Callback for rejection of PSE submission. Maps $submission to new Project
- * Profile node, saves, then sends out notifications.
- */
-function transition_pse_submission_accept_action($submission) {
-  // map $submission to new $project node, send out, delete $submission
-
-  // build new Project node, add values @todo move to own function
-  global $user;
-  $project = new stdClass();
-  $project->type = 'project_profile';
-  $project->uid = $submission->uid;
-  $project->status = 1; //(1 or 0): published or not
-  // title & body
-  $project->title = $submission->title;
-  $project->field_project_summary[0]['value'] = $submission->body;
-  // just assign the correct LID to our new Project node
-  $project->locations[0]['lid'] = $submission->locations[0]['lid'];
-  // project type
-  $project->field_project_org_type[0]['value'] = $submission->field_project_org_type[0]['value'];
-  // set related initiative as releated and web contact to widget owner
-  $project->field_initiative[0]['nid'] = $submission->field_submission_initiative[0]['nid'];
-  $project->field_webcontact_user[0]['uid'] = $submission->field_submission_webmaster[0]['uid'];
-  // set website
-  $project->field_website_home[0]['url'] = $submission->field_website_home[0]['url'];
-  // set source as PSE
-  $project->field_content_source[0]['value'] = 'Widget-PSE';
-  // avoid this sending notifications
-  $project->notifications_content_disable = 1;
-  // Save this node
-  node_save($project);
-
-  // if saved ok, send notifications
-  if ($project->nid) {
-    // tell submitter about the new accepted project
-    $author = user_load($project->uid);
-    $params = array(
-      'node' => $project,
-      'author' => $author,
-    );
-    // send mail, write to logs
-    drupal_mail('transition_pse', 'submitter_project_accepted', $author->mail, language_default(), $params);
-    watchdog(
-      'transition_pse',
-      'PSE -- Accepted submission: @title, @project_link',
-      array(
-        '@title' => $project->title,
-        '@project_link' => url('node/' . $project->nid, array('absolute' => TRUE)),
-      )
-    );
-    // all done here, remove this now-defunct $submission node
-    node_delete($submission->nid);
-  }
-  // horid hack to clear the messages created by the deletion of the node
-  $_SESSION['messages'] = array();
-}
-
-/**
- * Callback for rejection of PSE submission -- sends rejection email and
- * deletes $submission.
- */
-function transition_pse_submission_reject_action($submission) {
-  // load author of $submission, send message of rejection
-  $author = user_load($submission->uid);
-  module_load_include('inc', 'transition_pse', 'transition_pse.pages');
-  $params = array(
-    'node' => $submission,
-    'author' => $author,
-  );
-  // send mail, make note in log
-  drupal_mail('transition_pse', 'submitter_project_rejected', $author->mail, language_default(), $params);
-  watchdog(
-    'transition_pse',
-    'PSE -- Rejected submission: @title, @summary',
-    array(
-      '@title' => $submission->title,
-      '@summary' => $submission->body,
-    )
-  );
-  // delete the submission
-  node_delete($submission->nid);
-  // horid hack to clear the messages created by the deletion of the node
-  $_SESSION['messages'] = array();
-
 }
 
 /**
