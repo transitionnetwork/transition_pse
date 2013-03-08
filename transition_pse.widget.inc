@@ -7,7 +7,7 @@
 
 /**
  * get widget code page callback
- * @todo tidy this up, break into smaller functions and theme()
+ * @todo tidy this up, break into smaller functions and theme() more
  */
 function transition_pse_widget_generate($account_uid = -1, $type = 'sidebar', $initiative_id = -1) {
   // belt & braces ensure user and type are ok
@@ -109,8 +109,25 @@ function transition_pse_widget_generate($account_uid = -1, $type = 'sidebar', $i
     $output .= t('<h3>Step 3: Add this code to your site</h3>');
     $output .= theme('web_widgets_embed_code', $widget_html, 'iframe');
 
+    // Show option to sign up to widget newsletter ONLY if user hasn't already done so.
+    // @note This all smells a bit because the MC module doesn't have the best of APIs.
+    $step = 4;
+    if (module_exists('mailchimp')) {
+      // get user's subscription status (see mailchimp.module, line ~222)
+      $q = _mailchimp_get_api_object();
+      $memberinfo = $q->listMemberInfo(TRANSITION_PSE_MC_LID, $user->mail);
+      // check status, add form if user not already subscribed
+      if ($memberinfo['status'] == 'unsubscribed') {
+        $output .= t('<h3>Step !step: Keep updated about your widget</h3>', array('!step' => $step));
+        module_load_include('inc', 'transition_pse', 'transition_pse.pages');
+        $output .= drupal_get_form('transition_pse_newsletter_form');
+        // add another step
+        $step++;
+      }
+    }
+
     //@todo theme functions!
-    $output .= t('<h3>4. Now the widget is on your website</h3>');
+    $output .= t('<h3>Step !step: Now the widget is on your website</h3>', array('!step' => $step));
 
     $output .= t('<p>To get projects added you now need to promote the widget: Put it in your
       newsletters, email-outs, link to it from your news items, and tell everyone about it.</p>');

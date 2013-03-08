@@ -128,28 +128,6 @@ function transition_pse_entry_form($form_state) {
     '#weight' => 7,
   );
 
-  // add MailChimp list option, if available
-  // @see Adapted from mailchimp_user() 'register' section
-  /*
-  if (module_exists('mailchimp')) {
-    global $user;
-    $lists = _mailchimp_get_available_lists($user);
-    // wrap in a fieldset
-    $form['mailchimp_list_forms'] = array(
-      '#type' => 'fieldset',
-      '#title' => t('Keep me updated about the widget'),
-      '#weight' => 8,
-    );
-    // get MC subscribe form, subscribe by default
-    $mcform = mailchimp_subscribe_auth_form($form_state, $user, FALSE, $lists[TRANSITION_PSE_MC_LID]);
-    $mcform['wrapper' . TRANSITION_PSE_MC_LID]['mailchimp_list_' . TRANSITION_PSE_MC_LID]['#default_value'] = TRUE;
-    // merge into our form
-    $form['mailchimp_list_forms'][] = $mcform['wrapper' . TRANSITION_PSE_MC_LID];
-    unset($mcform['wrapper' . TRANSITION_PSE_MC_LID]);
-    $form = array_merge($form, $mcform);
-  }
-  */
-
   $form['submit'] = array(
     '#type' => 'submit',
     '#value' => t('Submit your project!'),
@@ -214,22 +192,6 @@ function transition_pse_entry_form_submit($form, &$form_state) {
   $node->notifications_content_disable = 1;
   node_save($node);
 
-  // subscribe user to mailchimp list
-  // @see Adapted from mailchimp_user() 'insert' section
-  /*
-   * if (module_exists('mailchimp') && $q = _mailchimp_get_api_object()) {
-    foreach ((array)$form_state['values']['lists'] as $list) {
-      // is the checkbox for the newsletter selected?
-      if (isset($form_state['values']['mailchimp_list_' . $list->id] ) && $form_state['values']['mailchimp_list_' . $list->id] ) {
-        $merge_vars = _mailchimp_load_user_list_mergevars($user->uid, $list->id, $q->listMergeVars($list->id));
-        $ret = _mailchimp_subscribe_user($list, $user->mail, $merge_vars, TRUE, $q);
-        if (!$ret) {
-          watchdog('mailchimp', 'MCAPI Error: %errormsg', array('%errormsg' => $q->errorMessage), WATCHDOG_ERROR);
-        }
-      }
-    }
-  }
-  * */
   // if saved ok, send email notifications (would love D7 Rules here... ;-) )
   if ($node->nid) {
     // tell webmaster about the new submission
@@ -250,6 +212,57 @@ function transition_pse_entry_form_submit($form, &$form_state) {
   }
 }
 
+
+/**
+ * Mailchimp signup form for Widget Newsletter
+ *
+ * @see Adapted from mailchimp_user() 'register' section
+ */
+function transition_pse_newsletter_form($form_state) {
+  if (module_exists('mailchimp')) {
+    global $user;
+    $lists = _mailchimp_get_available_lists($user);
+    // get MC subscribe form
+    $form = mailchimp_subscribe_auth_form($form_state, $user, FALSE, $lists[TRANSITION_PSE_MC_LID]);
+
+    // if we have found our newsletter
+    if (isset($form['wrapper' . TRANSITION_PSE_MC_LID])) {
+      // subscribe by default and add submit button, return form
+      $form['wrapper' . TRANSITION_PSE_MC_LID]['mailchimp_list_' . TRANSITION_PSE_MC_LID]['#default_value'] = TRUE;
+      $form['submit'] = array(
+        '#type' => 'submit',
+        '#value' => t('Get the newsletter'),
+        '#weight' => 10,
+      );
+      return $form;
+    }
+  }
+}
+
+/**
+ * Submit handler for Mailchimp Newsletter signup -- won't allow unsubscribe (by design!)
+ *
+ * see Adapted from mailchimp_user() 'insert' section
+ */
+function transition_pse_newsletter_form_submit($form, &$form_state) {
+  global $user;
+  if (module_exists('mailchimp') && $q = _mailchimp_get_api_object()) {
+    foreach ((array)$form_state['values']['lists'] as $list) {
+      // is the checkbox for the newsletter selected?
+      if (isset($form_state['values']['mailchimp_list_' . $list->id]) $form_state['values']['mailchimp_list_' . $list->id]) {
+        // subscribe
+        $merge_vars = _mailchimp_load_user_list_mergevars($user->uid, $list->id, $q->listMergeVars($list->id));
+        $ret = _mailchimp_subscribe_user($list, $user->mail, $merge_vars, TRUE, $q);
+        if (!$ret) {
+          watchdog('mailchimp', 'MCAPI Error: %errormsg', array('%errormsg' => $q->errorMessage), WATCHDOG_ERROR);
+        }
+        else {
+          drupal_set_message('Thank you for subscribing.');
+        }
+      }
+    }
+  }
+}
 /**
  * Builds a unified login/registration page
  *
