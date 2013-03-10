@@ -218,7 +218,7 @@ function transition_pse_entry_form_submit($form, &$form_state) {
  *
  * @see Adapted from mailchimp_user() 'register' section
  */
-function transition_pse_newsletter_form($form_state) {
+function transition_pse_newsletter_form($form_state, $stand_alone = FALSE) {
   if (module_exists('mailchimp')) {
     global $user;
     $lists = _mailchimp_get_available_lists($user);
@@ -228,12 +228,19 @@ function transition_pse_newsletter_form($form_state) {
     // if we have found our newsletter
     if (isset($form['wrapper' . TRANSITION_PSE_MC_LID])) {
       // subscribe by default and add submit button, return form
+      $form['wrapper' . TRANSITION_PSE_MC_LID]['mailchimp_list_' . TRANSITION_PSE_MC_LID]['#title'] = t('Please keep me up to date with changes to widget code and other related updates (no spam, we promise)!');
       $form['wrapper' . TRANSITION_PSE_MC_LID]['mailchimp_list_' . TRANSITION_PSE_MC_LID]['#default_value'] = TRUE;
-      $form['submit'] = array(
-        '#type' => 'submit',
-        '#value' => t('Get the newsletter'),
-        '#weight' => 10,
+      $form['newsletter-note'] = array(
+        '#type' => 'markup',
+        '#value' => t('<p><strong>Note:</strong> The widget\'s code will change so please don\'t opt out of this - we will need to update you occasionally.</p>'),
       );
+      // add submit button if needed
+      if ($stand_alone) {
+        $form['submit'] = array(
+          '#type' => 'submit',
+          '#value' => t('Get the newsletter'),
+        );
+      }
       return $form;
     }
   }

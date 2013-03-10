@@ -51,7 +51,14 @@ function transition_pse_perm() {
  */
 function transition_pse_menu() {
   $items = array();
-  // add page -- builds a variant of the node/add/[TRANSITION_PSE_CT] page with
+  // get widget code page
+  $items['pse/widget/get'] = array(
+    'title' => 'Get the Projects Widget!',
+    'page callback' => 'transition_pse_widget_get',
+    'access arguments' => array('access content'),
+    'file' => 'transition_pse.widget.inc',
+    'type' => MENU_CALLBACK,
+  );
   // unified reg/login first
   $items['pse/entry/add-project/%/%'] = array(
     // 'title' => 'Add your project',
@@ -103,20 +110,13 @@ function transition_pse_menu() {
     'file' => 'transition_pse.pages.inc',
     'type' => MENU_CALLBACK,
   );
-  // get widget code page
-  $items['pse/widget/get'] = array(
-    'title' => 'Get the Projects Widget!',
-    'page callback' => 'transition_pse_widget_generate',
-    'access callback' => 'transition_pse_check_web_point_of_contact',
-    'file' => 'transition_pse.widget.inc',
-    'type' => MENU_CALLBACK,
-  );
+
   // accept project submission
   $items['pse/submission/%/accept'] = array(
     'title' => 'Accept project submission',
     'page callback' => 'transition_pse_submission_accept',
     'page arguments' => array(2),
-    'access callback' => 'transition_pse_check_web_point_of_contact',
+    'access callback' => 'transition_pse_web_point_of_contact_initiatives_access',
     'file' => 'transition_pse.moderation.inc',
     'type' => MENU_CALLBACK,
   );
@@ -125,7 +125,7 @@ function transition_pse_menu() {
     'title' => 'Reject project submission',
     'page callback' => 'transition_pse_submission_reject',
     'page arguments' => array(2),
-    'access callback' => 'transition_pse_check_web_point_of_contact',
+    'access callback' => 'transition_pse_web_point_of_contact_initiatives_access',
     'file' => 'transition_pse.moderation.inc',
     'type' => MENU_CALLBACK,
   );
@@ -395,15 +395,41 @@ function _transition_pse_overriding_form_flag($set = FALSE) {
 
 /**
  * Access callback for users who are a Web Point of Contact for an initiative
+ *
+ * @return TRUE when current $user is a Web PoC for an initiative.
  */
-function transition_pse_check_web_point_of_contact() {
+function transition_pse_web_point_of_contact_initiatives_access() {
   global $user;
-  // static cache this to avoid multiple lookups
-  static $user_web_poc = NULL;
-  if ($user->uid > 0 && is_null($user_web_poc)) {
-    // look up Web PoC field for user uid, store nid of result
-    $result = db_query("SELECT nid FROM {content_field_webcontact_user} WHERE field_webcontact_user_uid = '%d' LIMIT 0, 1", $user->uid);
-    $user_web_poc = (db_result($result));
+  $nids = transition_pse_web_point_of_contact_initiatives($user);
+  if (is_array($nids) && (count($nids) > 0)) {
+    return TRUE;
   }
-  return $user_web_poc;
+  return FALSE;
+}
+
+/**
+ * Gets array nids of initiatives where Web Point of Contact is $account
+ *
+ * @return array of nids for initiatives where the $account is a web PoC.
+ */
+function transition_pse_web_point_of_contact_initiatives($account) {
+  // static cache this to avoid multiple lookups
+  static $account_web_pocs = NULL;
+  if ($account->uid > 0 && is_null($account_web_pocs)) {
+    // look up Web PoC field for initiatives for this user, store nid of result (max 10 inis per user)
+    $result = db_query(
+      "SELECT n.nid FROM {content_field_webcontact_user} poc
+      INNER JOIN node n ON n.nid = poc.nid
+       WHERE poc.field_webcontact_user_uid = '%d'
+       AND n.type IN ('initiative_profile', 'initiative_hub_profile')
+       LIMIT 0, 10",
+      $account->uid
+    );
+    // store ini nids in array for later
+    $account_web_pocs = array();
+    while ($row = db_fetch_array($result)) {
+      $account_web_pocs[$row['nid']] = $row['nid'];
+    }
+  }
+  return $account_web_pocs;
 }
