@@ -18,6 +18,18 @@ function transition_pse_widget_get($account_uid = -1, $type = 'sidebar', $initia
   if ($account_uid == -1) $account_uid = $user->uid;
   if ($type <> 'full' && $type <> 'button') $type = 'sidebar';
 
+  // warn & bail if no inis to chose from
+  if (!transition_pse_web_point_of_contact_initiatives_access()) {
+    $output .= t('<h2>Sorry, you must be the <em>Web Point of Contact</em> for your initiative to continue</h2>');
+    $output .= t('<p><strong>Unfortunately, you cannot use the widget until you have been set up as the "Web Point of Contact" for your local initiative.</strong></p>');
+    $output .= t(
+      '<p>Please find your initiative in the <a href="!link">Initiatives Directory</a> and either edit it (if you have that ability), or contact the person who is marked as the "Primary point of contact".</p>',
+      array('!link' => '/initiatives')
+    );
+    $output .= t('<p>Remember to come back here when you\'re done, and please <a href="!link">contact us</a> if you have any questions or problems.</hp>', array('!link' => '/contact'));
+    return $output;
+  }
+
   // load this user, prepare initiative data, load nids
   $account = user_load($account_uid);
   $initiatives = array(
@@ -37,24 +49,12 @@ function transition_pse_widget_get($account_uid = -1, $type = 'sidebar', $initia
       // ini loaded ok, add title to options
       $initiatives['options'][$nid] = $node->title;
       // note we've found the $initiative_id
-      if ($nid == $initiative_id) $initiatives['ok'] = TRUE;
+      if ($nid == $initiative_id) $initiatives['found chosen'] = TRUE;
     }
     else {
       // can't load ini (unpublished?), remove option
       unset($initiatives['options'][$nid]);
     }
-  }
-
-  // warn & bail if no inis to chose from
-  if (!isset($initiatives['ok']) || !transition_pse_web_point_of_contact_initiatives_access()) {
-    $output .= t('<h2>Sorry, you must be the <em>Web Point of Contact</em> for your initiative to continue</h2>');
-    $output .= t('<p><strong>Unfortunately, you cannot use the widget until you have been set up as the "Web Point of Contact" for your local initiative.</strong></p>');
-    $output .= t(
-      '<p>Please find your initiative in the <a href="!link">Initiatives Directory</a> and either edit it (if you have that ability), or contact the person who is marked as the "Primary point of contact".</p>',
-      array('!link' => '/initiatives')
-    );
-    $output .= t('<p>Remember to come back here when you\'re done, and please <a href="!link">contact us</a> if you have any questions or problems.</hp>', array('!link' => '/contact'));
-    return $output;
   }
 
   // if we're already a
@@ -81,7 +81,7 @@ function transition_pse_widget_owner_signup_form($form_state, $account) {
     $q = _mailchimp_get_api_object();
     $memberinfo = $q->listMemberInfo(TRANSITION_PSE_MC_LID, $account->mail);
     // check status, add form if user not already subscribed
-    if ($memberinfo['status'] == 'unsubscribed') {
+    if (empty($memberinfo) || $memberinfo['status'] == 'unsubscribed') {
       $form_newsletter = transition_pse_newsletter_form($form_state);
     }
   }
@@ -179,7 +179,7 @@ function transition_pse_widget_generate($account, $type, $initiatives) {
   $output .= drupal_get_form('transition_pse_widget_generate_options_form', $type, $initiatives, $options, $account);
 
 
-  if ($initiatives['ok']) {
+  if ($initiatives['found chosen']) {
     // make pse urls, ensure secure
     global $base_url;
     $base_url_secure = str_replace('http:', 'https:', $base_url);

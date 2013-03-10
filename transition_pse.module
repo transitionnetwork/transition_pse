@@ -416,12 +416,14 @@ function transition_pse_web_point_of_contact_initiatives($account) {
   // static cache this to avoid multiple lookups
   static $account_web_pocs = NULL;
   if ($account->uid > 0 && is_null($account_web_pocs)) {
-    // look up Web PoC field for initiatives for this user, store nid of result (max 10 inis per user)
+    // look up Web PoC field for published initiatives for this user, store nid
+    // of result (up to max 10 per user)
     $result = db_query(
       "SELECT n.nid FROM {content_field_webcontact_user} poc
       INNER JOIN node n ON n.nid = poc.nid
        WHERE poc.field_webcontact_user_uid = '%d'
        AND n.type IN ('initiative_profile', 'initiative_hub_profile')
+       AND n.status = 1
        LIMIT 0, 10",
       $account->uid
     );

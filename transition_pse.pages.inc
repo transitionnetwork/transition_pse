@@ -361,7 +361,7 @@ function transition_pse_view_full($participant_uid = 0, $initiative_nid = 0) {
   // make quicktabs
   $tabs = array();
   $tabs['initiative'] = array(
-    'title' => $initiative_title,
+    'title' => 'Near initiative',
     'type' => 'view',
     'vid' => 'transition_pse_widget',
     'display' => 'block_2',
