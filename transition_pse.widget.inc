@@ -236,7 +236,7 @@ function transition_pse_widget_generate($account, $type, $initiatives) {
       '<p>Once people start adding their proejcts, you will get the project submissions alerts
       via email. Please attend to these as soon as you can; it won\'t take long. You will be able to moderate
       the submissions in the <a href="@link"><em>Projects moderation</em> tab </a>of your user account.</p>',
-      array('@link' => 'user/' . $account->uid . '/widget-moderation')
+      array('@link' => '/user/' . $account->uid . '/widget-moderation')
     );
   }
   else {
