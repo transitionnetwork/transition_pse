@@ -74,6 +74,7 @@ function transition_pse_widget_owner_signup_form($form_state, $account) {
   global $user;
   $form = array();
   $form_newsletter = array();
+  $got_newsletter = FALSE;
   // get mailchimp code from other include ONLY IF we're not being admin
   if ($user->uid == $account->uid) {
     module_load_include('inc', 'transition_pse', 'transition_pse.pages');
@@ -83,6 +84,7 @@ function transition_pse_widget_owner_signup_form($form_state, $account) {
     // check status, add form if user not already subscribed
     if (empty($memberinfo) || $memberinfo['status'] == 'unsubscribed') {
       $form_newsletter = transition_pse_newsletter_form($form_state);
+      $got_newsletter = TRUE;
     }
   }
   // decide on message
@@ -117,7 +119,8 @@ function transition_pse_widget_owner_signup_form($form_state, $account) {
     '#value' => t('I agree, give me the widget!'),
     '#weight' => 50,
   );
-  $form = array_merge($form, $form_newsletter);
+  if ($got_newsletter) $form = array_merge($form, $form_newsletter);
+  watchdog('transition_pse', print_r($form, TRUE));
   return $form;
 }
 
