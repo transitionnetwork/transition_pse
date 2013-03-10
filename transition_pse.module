@@ -107,7 +107,7 @@ function transition_pse_menu() {
   $items['pse/widget/get'] = array(
     'title' => 'Get the Projects Widget!',
     'page callback' => 'transition_pse_widget_generate',
-    'access arguments' => array('get widget code'),
+    'access callback' => 'transition_pse_check_web_point_of_contact',
     'file' => 'transition_pse.widget.inc',
     'type' => MENU_CALLBACK,
   );
@@ -116,7 +116,7 @@ function transition_pse_menu() {
     'title' => 'Accept project submission',
     'page callback' => 'transition_pse_submission_accept',
     'page arguments' => array(2),
-    'access arguments' => array('get widget code'),
+    'access callback' => 'transition_pse_check_web_point_of_contact',
     'file' => 'transition_pse.moderation.inc',
     'type' => MENU_CALLBACK,
   );
@@ -125,7 +125,7 @@ function transition_pse_menu() {
     'title' => 'Reject project submission',
     'page callback' => 'transition_pse_submission_reject',
     'page arguments' => array(2),
-    'access arguments' => array('get widget code'),
+    'access callback' => 'transition_pse_check_web_point_of_contact',
     'file' => 'transition_pse.moderation.inc',
     'type' => MENU_CALLBACK,
   );
@@ -391,4 +391,19 @@ function _transition_pse_overriding_form_flag($set = FALSE) {
   static $flag = FALSE;
   if ($set) $flag = TRUE;
   return $flag;
+}
+
+/**
+ * Access callback for users who are a Web Point of Contact for an initiative
+ */
+function transition_pse_check_web_point_of_contact() {
+  global $user;
+  // static cache this to avoid multiple lookups
+  static $user_web_poc = NULL;
+  if ($user->uid > 0 && is_null($user_web_poc)) {
+    // look up Web PoC field for user uid, store nid of result
+    $result = db_query("SELECT nid FROM {content_field_webcontact_user} WHERE field_webcontact_user_uid = '%d' LIMIT 0, 1", $user->uid);
+    $user_web_poc = (db_result($result));
+  }
+  return $user_web_poc;
 }
