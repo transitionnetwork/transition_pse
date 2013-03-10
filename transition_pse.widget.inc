@@ -84,7 +84,6 @@ function transition_pse_widget_owner_signup_form($form_state, $account) {
     // check status, add form if user not already subscribed
     if (empty($memberinfo) || $memberinfo['status'] == 'unsubscribed') {
       $form_newsletter = transition_pse_newsletter_form($form_state);
-      $got_newsletter = TRUE;
     }
   }
   // decide on message
@@ -119,8 +118,7 @@ function transition_pse_widget_owner_signup_form($form_state, $account) {
     '#value' => t('I agree, give me the widget!'),
     '#weight' => 50,
   );
-  if ($got_newsletter) $form = array_merge($form, $form_newsletter);
-  watchdog('transition_pse', print_r($form, TRUE));
+  if (is_array($form_newsletter)) $form = array_merge($form, $form_newsletter);
   return $form;
 }
 
