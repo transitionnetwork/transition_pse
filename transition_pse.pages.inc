@@ -244,6 +244,9 @@ function transition_pse_newsletter_form($form_state, $stand_alone = FALSE) {
       return $form;
     }
   }
+  else {
+    watchdog('transition_pse', 'Mailchimp module not available');
+  }
 }
 
 /**
