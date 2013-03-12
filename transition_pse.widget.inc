@@ -150,7 +150,7 @@ function transition_pse_widget_owner_signup_form_submit($form, &$form_state) {
   // handle newsletter signup with existing code (only when user is acting for themselves)
   if ($form_state['values']['mailchimp_list_' . TRANSITION_PSE_MC_LID]) {
     module_load_include('inc', 'transition_pse', 'transition_pse.pages');
-    transition_pse_newsletter_form_submit($form, &$form_state);
+    transition_pse_newsletter_form_submit($form, $form_state);
   }
 }
 
