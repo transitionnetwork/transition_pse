@@ -213,13 +213,14 @@ function transition_pse_widget_generate($account, $type, $initiatives) {
 
     // Show option to sign up to widget newsletter ONLY if user hasn't already done so.
     // @note This all smells a bit because the MC module doesn't have the best of APIs.
+    // @todo turn this into a function as it's used in transition_pse_widget_owner_signup_form() too.
     $step = 4;
     if (module_exists('mailchimp')) {
       // get user's subscription status (see mailchimp.module, line ~222)
       $q = _mailchimp_get_api_object();
       $memberinfo = $q->listMemberInfo(TRANSITION_PSE_MC_LID, $account->mail);
       // check status, add form if user not already subscribed
-      if ($memberinfo['status'] == 'unsubscribed') {
+      if (empty($memberinfo) || $memberinfo['status'] == 'unsubscribed') {
         $output .= t('<h3>Step !step: Keep updated about your widget</h3>', array('!step' => $step));
         module_load_include('inc', 'transition_pse', 'transition_pse.pages');
         $output .= drupal_get_form('transition_pse_newsletter_form', TRUE);
