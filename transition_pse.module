@@ -400,6 +400,7 @@ function _transition_pse_overriding_form_flag($set = FALSE) {
  */
 function transition_pse_web_point_of_contact_initiatives_access() {
   global $user;
+  if ($user->uid == 1) return TRUE;
   $nids = transition_pse_web_point_of_contact_initiatives($user);
   if (is_array($nids) && (count($nids) > 0)) {
     return TRUE;
