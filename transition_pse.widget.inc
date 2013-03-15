@@ -169,8 +169,8 @@ function transition_pse_widget_generate($account, $type, $initiatives) {
   // add form to allow choice of sidebar/full and ini to relate to via UI/tabs/links etc.
   $path = base_path() . drupal_get_path('module', 'transition_pse');
   $output .= '<div class="help">' . t(
-    '<strong>What\'s the Project Sharing Widget?</strong> You might like to learn more about the widget and its use with our <a href="@link_faq">FAQs</a> and <a href="@link_setup">setup guide</a>.',
-    array('@link_faq' => '/pse/widget/faq', '@link_setup' => '/node/27590')
+    '<strong>What\'s the Project Sharing Widget?</strong> Go to <a href="!link">the Project Sharing Engine homepage</a> for links to all the suitable pages.',
+    array('@link' => '/pse')
   ) . '</div>';
   $output .= t('<h3>Step 1: Choose your style and initiative</h3>');
   $output .= t(
