@@ -339,7 +339,7 @@ function theme_pse_widget_container($type, $widget_urls, $assets, $options) {
   $output .= '<script type="text/javascript" src="' . $assets['js'] . '"></script>';
   $output .= '<link rel="stylesheet" type="text/css" href="' . $assets['css'] . '" />';
   $output .= '<div class="tn-pse-widget-container tn-pse-widget-view-' . $type . '">';
-  $output .= ' <div class="tn-pse-widget-header"></div>';
+  $output .= '<div class="tn-pse-widget-header"></div>';
 
   // show view area if not button-only widget
   if ($type <> 'button') {
@@ -362,8 +362,7 @@ function theme_pse_widget_container($type, $widget_urls, $assets, $options) {
 function theme_pse_widget_view_container($type, $widget_urls, $options) {
   //generate view widget container and iframe
   $output = '<div class="widget-upper">';
-  $output .= ' <iframe class="tn-pse-widget-view-widget" src="' . $widget_urls['view'] . '" frameborder="0"
-      style="width: 100%; height: ' . $options['height'] . 'px; border: none; overflow: hidden;"></iframe>';
+  $output .= '<iframe class="tn-pse-widget-view-widget" src="' . $widget_urls['view'] . '" frameborder="0" style="width: 100%; height: ' . $options['height'] . 'px; border: none; overflow: hidden;"></iframe>';
   $output .= '</div>';
 
   return $output;
@@ -375,21 +374,21 @@ function theme_pse_widget_view_container($type, $widget_urls, $options) {
  */
 function theme_pse_widget_entry_container($type, $widget_urls, $options) {
   $output = '<div class="tn-pse-widget-widget-lower">';
-  $output .= ' <div class="tn-pse-widget-grey-box"><p><strong>Are you involved in a community project? Want people to know?</strong></p>';
-  $output .= '   <a href="' . $widget_urls['entry nojs'] . '" class="tn-pse-widget-entry-widget-launcher">';
-  $output .= '    <span>' . $options['add button text'] . '</span></a>';
+  $output .= '<div class="tn-pse-widget-grey-box"><p><strong>Are you involved in a community project? Want people to know?</strong></p>';
+  $output .= '<a href="' . $widget_urls['entry nojs'] . '" class="tn-pse-widget-entry-widget-launcher">';
+  $output .= '<span>' . $options['add button text'] . '</span></a>';
 
   // show 'about' link here if not full widget
   if ($type != 'full') {
-    $output .= '   <p class="tn-pse-widget-about"><a href="' . $widget_urls['about'] . '" class="tn-pse-widget-about-widget-launcher">About this widget</a></p>';
+    $output .= '<p class="tn-pse-widget-about"><a href="' . $widget_urls['about'] . '" class="tn-pse-widget-about-widget-launcher">About this widget</a></p>';
   }
-  $output .= ' </div>';
+  $output .= '</div>';
   $output .= '</div>';
   $output .= '<div class="tn-pse-widget-modal-mask" style="display: none">';
-  $output .= ' <div class="tn-pse-widget-modal-outer">';
-  $output .= '  <a href="#" class="tn-pse-widget-modal-button-close">Close</a>';
-  $output .= '  <div class="tn-pse-widget-modal-inner"><!-- iFrame with class "entry-widget" will be inserted here --></div>';
-  $output .= ' </div>';
+  $output .= '<div class="tn-pse-widget-modal-outer">';
+  $output .= '<a href="#" class="tn-pse-widget-modal-button-close">Close</a>';
+  $output .= '<div class="tn-pse-widget-modal-inner"><!-- iFrame with class "entry-widget" will be inserted here --></div>';
+  $output .= '</div>';
   $output .= '</div>';
   return $output;
 }

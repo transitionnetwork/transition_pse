@@ -10,13 +10,6 @@
  * Builds and modifies the Project entry form
  */
 function transition_pse_entry_form_steps($participant_uid = 0, $initiative_nid = 0) {
-  if ($_SERVER['HTTP_HOST'] == 'tn.dev') {
-    // JK make it erroneous locally!
-    //@todo remove after Alpha/beta test phase
-    error_reporting(E_ALL);
-    ini_set('display_errors', TRUE);
-    ini_set('display_startup_errors', TRUE);
-  }
   // hide admin nmenu
   if (module_exists('admin_menu')) {
     admin_menu_suppress();
@@ -28,8 +21,9 @@ function transition_pse_entry_form_steps($participant_uid = 0, $initiative_nid =
 
   // build nicely themed page
   $output = '';
-  // check user is logged in
   global $user;
+
+  // check user is logged in
   if ($user->uid) {
     // we're logged in, woop, show project add form
     $output .= transition_pse_entry_page($participants);
