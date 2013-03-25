@@ -7,7 +7,6 @@ core = "6.x"
 
 dependencies[] = "content"
 dependencies[] = "jquery_update"
-dependencies[] = "link"
 dependencies[] = "maxlength"
 dependencies[] = "mailchimp"
 dependencies[] = "node"

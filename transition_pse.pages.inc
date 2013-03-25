@@ -73,9 +73,7 @@ function transition_pse_entry_form($form_state) {
     $form['summary']['#after_build'] = array('_maxlength_format_element');
   }
 
-  // Website @todo should use Link module, but can't find out how to show only URL!
-  // Damn crappy Drupal contrib documentation! Have to map to correct field now, and
-  // validate it later with Link module's link_validate_url().
+  // Simple website field
   $form['website'] = array(
     '#type' => 'textfield',
     '#title' => t('Project website'),
@@ -136,13 +134,10 @@ function transition_pse_entry_form($form_state) {
 function transition_pse_entry_form_validate($form, &$form_state) {
   // extra validation for link here
   $website = $form_state['values']['website'];
-  if (module_exists('link') && !empty($website)) {
-    // validate link href with Link module function (this module has a dependency on Link).
-    // Smelly but effective.
-    $type = link_validate_url($website);
-    // only allow external links
-    if ($type != LINK_EXTERNAL) {
-      form_set_error('website', t('Not a valid external website URL.'));
+  if (!empty($website)) {
+    // validate link href with PHP 5.2+ Link, and then check it is http(s)
+    if (filter_var($website, FILTER_VALIDATE_URL) === false || strpos($website, 'http') !== 0) {
+      form_set_error('website', t('Not a valid external website URL - must begin with lowercase \'http://\' or \'https://\'.'));
     }
   }
 }
