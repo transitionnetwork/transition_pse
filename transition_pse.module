@@ -135,51 +135,51 @@ function transition_pse_menu() {
 /**
  * Implementation of hook_form_alter()
  *
- * when _transition_pse_overriding_form_flag is set, this removes all
- * non-mandatory items from the User forms.
- *
- * Also ensures all widet-submitted content is flagged for moderation
+ * when _transition_pse_overriding_form_flag is set, it removes all non-mandatory
+ * items from the User Register form, otherwise just hides the widget owner's
+ * mailchimp newsletter option.
  */
 function transition_pse_form_alter(&$form, &$form_state, $form_id) {
+  // Only affect user register form
+  if ($form_id != 'user_register') return;
+
+  // Always hide widget owner's newsletter option
+  // @BUG? see: https://tech.transitionnetwork.org/trac/ticket/447
+  $form['mailchimp_list_forms']['wrapper' . TRANSITION_PSE_MC_LID]['#access'] = FALSE;
+
+  // Are we registering from PSE?
   if (_transition_pse_overriding_form_flag() == TRUE) {
-    switch ($form_id) {
-      case "user_register":
-        _transition_pse_hide_non_manadatory_elements($form);
+    // PSE registration, hide all the bits we don't need...
+    _transition_pse_hide_non_manadatory_elements($form);
 
-        // hide username since it will be auto-created from first/last name on user save
-        // but for now make it unique to get through safely
-        $form['account']['name']['#type'] = 'hidden';
-        $form['account']['name']['#default_value'] = 'PSEUSER--' . uniqid();
-        unset($form['account']['pass']['#type']);
+    // hide username since it will be auto-created from first/last name on user save
+    // but for now make it unique to get through safely
+    $form['account']['name']['#type'] = 'hidden';
+    $form['account']['name']['#default_value'] = 'PSEUSER--' . uniqid();
+    unset($form['account']['pass']['#type']);
 
-        // email tweak message
-        $form['account']['mail']['#description'] = t('We will not use your email address for anything else, nor give it to anyone else. ') . $form['account']['mail']['#description'];
+    // email tweak message
+    $form['account']['mail']['#description'] = t('We will not use your email address for anything else, nor give it to anyone else. ') . $form['account']['mail']['#description'];
 
-        // hide unneeded newsletter
-        // @BUG see: https://tech.transitionnetwork.org/trac/ticket/447
-        $form['mailchimp_list_forms']['wrapper1b720da06c']['#access'] = FALSE;
-
-        // stop LoginToboggan doing its stuff
-        $logintoboggan_index = array_search('logintoboggan_user_register_validate', $form['#validate']);
-        if ($logintoboggan_user_login_validate !== FALSE) {
-          unset($form['#validate'][$logintoboggan_index]);
-        }
-
-        // ensure we can build username on submit
-        array_unshift($form['#submit'], 'transition_pse_user_register_submit');
-
-        // remove field_roles_offered, field_initiative and field_themes from
-        // display/validation
-        $form['group_user_interest']['field_roles_offered']['#type'] = 'optionwidgets_select';
-        $form['group_user_interest']['field_roles_offered']['#access'] = FALSE;
-        unset($form['group_user_interest']['field_initiative']);
-        unset($form['group_user_interest']['field_themes']);
-
-        // and redirect to the thank you page when done
-        $redirect_to = 'pse/entry/add-project' . '?login=' . uniqid();
-        $_REQUEST['destination'] = $redirect_to;
-        break;
+    // stop LoginToboggan doing its stuff
+    $logintoboggan_index = array_search('logintoboggan_user_register_validate', $form['#validate']);
+    if ($logintoboggan_user_login_validate !== FALSE) {
+      unset($form['#validate'][$logintoboggan_index]);
     }
+
+    // ensure we can build username on submit
+    array_unshift($form['#submit'], 'transition_pse_user_register_submit');
+
+    // remove field_roles_offered, field_initiative and field_themes from
+    // display/validation
+    $form['group_user_interest']['field_roles_offered']['#type'] = 'optionwidgets_select';
+    $form['group_user_interest']['field_roles_offered']['#access'] = FALSE;
+    unset($form['group_user_interest']['field_initiative']);
+    unset($form['group_user_interest']['field_themes']);
+
+    // and redirect to the thank you page when done
+    $redirect_to = 'pse/entry/add-project' . '?login=' . uniqid();
+    $_REQUEST['destination'] = $redirect_to;
   }
 }
 
