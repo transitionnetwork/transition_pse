@@ -170,7 +170,7 @@ function transition_pse_widget_generate($account, $type, $initiatives) {
   $path = base_path() . drupal_get_path('module', 'transition_pse');
   $output .= '<div class="help">' . t(
     '<strong>What\'s the Project Sharing Widget?</strong> Go to <a href="!link">the Project Sharing Engine homepage</a> for links to all the suitable pages.',
-    array('@link' => '/pse')
+    array('!link' => '/pse')
   ) . '</div>';
   $output .= t('<h3>Step 1: Choose your style and initiative</h3>');
   $output .= t(
