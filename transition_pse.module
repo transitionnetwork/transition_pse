@@ -195,7 +195,7 @@ function transition_pse_user_register_submit($form, &$form_state) {
 
   // make alphanumeric only, set proper noun capitalisation
   $full_name = ucwords(strtolower($first_name . ' ' . $last_name));
-  $full_name = preg_replace("/[^a-zA-Z0-9\s]+/", "", $full_name);
+  $full_name = trim(preg_replace("/[^a-zA-Z0-9\s]+/", "", $full_name));
 
   // then ensure not too long after making space for 'counter' on end
   if (strlen($full_name) >= USERNAME_MAX_LENGTH - 3) $name = substr($name, 0, USERNAME_MAX_LENGTH - 3);
@@ -203,7 +203,8 @@ function transition_pse_user_register_submit($form, &$form_state) {
   // ensure username is unique
   $attempt = 0;
   $append = '';
-  while (!$suceess && $attempt < 256) {
+  $success = FALSE;
+  while (!$success && $attempt < 256) {
     // add attempt number to end of username if not unique - e.g. "John Smith 2"
     if ($attempt > 0) $append = ' ' . dechex($attempt);
 
