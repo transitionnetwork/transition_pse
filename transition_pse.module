@@ -192,9 +192,11 @@ function transition_pse_user_register_submit($form, &$form_state) {
   // build username from first & last names
   $first_name = $form_state['content_profile_registration']['profile']['node']->field_name_first[0]['value'];
   $last_name .= $form_state['content_profile_registration']['profile']['node']->field_name_last[0]['value'];
+
   // make alphanumeric only, set proper noun capitalisation
-  $full_name = preg_replace("/[^a-zA-Z0-9]+/", "", $full_name);
   $full_name = ucwords(strtolower($first_name . ' ' . $last_name));
+  $full_name = preg_replace("/[^a-zA-Z0-9]+/", "", $full_name);
+
   // then ensure not too long after making space for 'counter' on end
   if (strlen($full_name) >= USERNAME_MAX_LENGTH - 3) $name = substr($name, 0, USERNAME_MAX_LENGTH - 3);
 
